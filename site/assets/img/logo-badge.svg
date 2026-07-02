@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Hangar &amp; Harbor monogram">
+  <defs>
+    <linearGradient id="hhGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F6E7B4"/>
+      <stop offset="35%" stop-color="#D8B25C"/>
+      <stop offset="65%" stop-color="#B8892E"/>
+      <stop offset="100%" stop-color="#E9CD84"/>
+    </linearGradient>
+    <linearGradient id="hhGoldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F1DE9E"/>
+      <stop offset="50%" stop-color="#C79B3E"/>
+      <stop offset="100%" stop-color="#F1DE9E"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="200" height="200" fill="#0A1930"/>
+
+  <circle cx="100" cy="100" r="90" fill="none" stroke="url(#hhGoldRing)" stroke-width="2.2"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="url(#hhGoldRing)" stroke-width="1.4"/>
+
+  <g font-family="'Playfair Display', Georgia, 'Times New Roman', serif" font-weight="700" fill="url(#hhGold)" text-anchor="middle">
+    <text x="66" y="152" font-size="128">H</text>
+    <text x="134" y="152" font-size="128">H</text>
+    <text x="100" y="167" font-size="70">H</text>
+  </g>
+</svg>
