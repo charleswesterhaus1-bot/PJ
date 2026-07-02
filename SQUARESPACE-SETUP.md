@@ -9,11 +9,10 @@ Open the built site (`/site/index.html` and friends) in a browser side-by-side w
 ## 1. Before you start in Squarespace
 
 - **Template**: Pick a Squarespace 7.1 template with a full-bleed hero and clean typographic focus — anything in their "Bergen," "Paloma," or "Ansel" family works well. 7.1 templates are all built on the same Fluid Engine, so the exact template matters less than the settings below.
-- **Logo files**: Use `/site/assets/img/logo-badge-512.png` (or `-1024.png` for higher resolution needs) — upload this as your site logo and as your favicon in Design → Logo & Title.
+- **Logo file**: Use your original logo file (the one you have on your own device) — upload it directly as your site logo and favicon in Design → Logo & Title. Squarespace accepts PNG/JPG/SVG for both.
 - **Fonts**: Squarespace's font picker includes Google Fonts. Set:
-  - Headings → **Playfair Display** (weight 600/700)
+  - Headings → **Cormorant Garamond** (weight 600/700)
   - Body → **Inter** (weight 300–400)
-  - (Optional accent/italic font used for taglines in the built site: **Cormorant Garamond**, italic)
 
 ---
 
@@ -171,7 +170,7 @@ If you want pixel-closer typography/spacing matching the built reference site, g
 ```html
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --hh-navy-950:#060f1e;
@@ -180,7 +179,7 @@ If you want pixel-closer typography/spacing matching the built reference site, g
     --hh-gold-100:#f6e7b4;
     --hh-ivory:#f4efe3;
   }
-  h1,h2,h3,h4 { font-family:'Playfair Display', Georgia, serif !important; }
+  h1,h2,h3,h4 { font-family:'Cormorant Garamond', Georgia, serif !important; font-weight:700; }
   body, p, a, li { font-family:'Inter', sans-serif; }
 </style>
 ```
@@ -193,6 +192,6 @@ This is optional — Squarespace's native font/color pickers (Section 1–2 abov
 
 - `/site/index.html`, `services.html`, `about.html`, `portfolio.html`, `contact.html` — the full reference build, viewable by opening any file in a browser or running a local server (`python3 -m http.server` from inside `/site`).
 - `/site/assets/css/style.css` — full design system (colors, type, components) as CSS custom properties, useful as the source of truth for hex values and spacing if you want to go deeper than the summary in Section 2.
-- `/site/assets/img/logo-badge.svg` — vector recreation of your HH monogram, plus PNG exports at 512px and 1024px for uploading to Squarespace (logo, favicon, social profile images).
+- **Logo**: the reference build currently hot-links your logo from the file you uploaded during this session, so the pages render your real mark rather than a placeholder. That link works for any visitor's browser, but treat it as temporary — for the actual Squarespace site, upload your original logo file (the one on your own device) directly into Design → Logo & Title, not the hot-linked URL.
 
 When real client photos/video are ready, replace the Portfolio page's placeholder tiles first — that's the highest-impact update once you have material to show.
