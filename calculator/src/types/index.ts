@@ -1,15 +1,34 @@
 // Shared type definitions for the Hangar & Harbor Estimate Console.
-// Keeping these centralized means the config file, calculation engine, and
-// UI components all agree on the same shapes.
+// Keeping these centralized means config, engines, and UI components all
+// agree on the same shapes.
 
-/** A named multiplier or flat modifier used throughout the pricing engine. */
+/** 0 = not present, 1 = light, 2 = moderate, 3 = heavy. */
+export type SeverityLevel = 0 | 1 | 2 | 3
+
+export const SEVERITY_LABELS: Record<SeverityLevel, string> = {
+  0: 'None',
+  1: 'Light',
+  2: 'Moderate',
+  3: 'Heavy',
+}
+
+/** A named multiplier used throughout the pricing engine, with the
+ * plain-language reasons a client would accept as justification. */
 export interface RateOption {
   id: string
   label: string
   /** Multiplier applied to the running subtotal, e.g. 1.15 = +15% */
   multiplier: number
-  /** Optional short description shown as a tooltip/help text in the UI */
   description?: string
+  /** Bullet-point reasons shown on the estimate to justify the adjustment. */
+  factors?: string[]
+}
+
+export interface VehicleClassificationRule {
+  /** Lowercase make names that default to this tier. */
+  makes: string[]
+  /** Lowercase substrings checked against the model field; matches win over `makes`. */
+  modelKeywords: string[]
 }
 
 /** A primary detailing service/package — the base line of an estimate. */
@@ -19,6 +38,10 @@ export interface ServiceOption {
   description?: string
   basePrice: number
   baseLaborHours: number
+  /** Estimated product/consumable cost at the "medium" vehicle size — internal only. */
+  chemicalCost: number
+  /** Equipment/products actually used, from our current inventory. */
+  equipmentUsed: string[]
 }
 
 /** An optional add-on with its own flat price and labor contribution. */
@@ -28,6 +51,8 @@ export interface AddOnOption {
   description?: string
   price: number
   laborHours: number
+  chemicalCost: number
+  equipmentUsed: string[]
 }
 
 export type DiscountKind = 'military' | 'repeatClient' | 'referral' | 'portfolioVehicle' | 'custom'
@@ -53,11 +78,19 @@ export interface TravelConfig {
 }
 
 export interface LaborConfig {
-  /** Reference shop labor rate, used for internal cost visibility only. */
+  /** Shop labor rate used to derive internal cost/margin figures. */
   ratePerHour: number
   teamSizeThresholds: TeamSizeThreshold[]
   /** Round the estimated appointment length to the nearest fraction of an hour. */
   appointmentRoundingHours: number
+}
+
+/** A single piece of equipment/product in our current inventory — purely
+ * informational, but this is the list that justifies which services we can
+ * responsibly offer today. */
+export interface EquipmentItem {
+  category: string
+  items: string[]
 }
 
 /** Placeholder domain for future expansion (yachts, aircraft, etc). */
@@ -68,12 +101,29 @@ export interface FutureDomainConfig {
   addOns: AddOnOption[]
 }
 
+/** Feature modules planned but not built — flags only, so the nav/data
+ * layer can light them up later without restructuring anything. */
+export interface FeatureFlags {
+  yachts: boolean
+  aircraft: boolean
+  ceramicCoatings: boolean
+  maintenanceMemberships: boolean
+  fleetAccounts: boolean
+  crm: boolean
+  scheduling: boolean
+  invoicing: boolean
+  payments: boolean
+  employeeAccounts: boolean
+  analytics: boolean
+}
+
 export interface PricingConfig {
   company: {
     name: string
     tagline: string
   }
-  vehicleTypes: RateOption[]
+  equipment: EquipmentItem[]
+  vehicleTypes: (RateOption & { classification: VehicleClassificationRule })[]
   vehicleSizes: RateOption[]
   conditions: RateOption[]
   services: ServiceOption[]
@@ -85,7 +135,96 @@ export interface PricingConfig {
     yachts: FutureDomainConfig
     aircraft: FutureDomainConfig
   }
+  features: FeatureFlags
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Inspection
+// ─────────────────────────────────────────────────────────────────────────
+
+export type InspectionCategory = 'paint' | 'wheels' | 'interior' | 'engineBay'
+
+export interface InspectionItemDef {
+  id: string
+  label: string
+}
+
+export interface InspectionConfig {
+  paint: InspectionItemDef[]
+  wheels: InspectionItemDef[]
+  interior: InspectionItemDef[]
+  engineBay: InspectionItemDef[]
+}
+
+/** Severity keyed by inspection item id, one map per category. */
+export type InspectionCategoryState = Record<string, SeverityLevel>
+
+export interface InspectionState {
+  paint: InspectionCategoryState
+  wheels: InspectionCategoryState
+  interior: InspectionCategoryState
+  engineBay: InspectionCategoryState
+}
+
+export interface RecommendationResult {
+  suggestedServiceId: string
+  suggestedConditionId: string
+  suggestedAddOnIds: string[]
+  /** Why each recommended add-on was suggested, keyed by add-on id. */
+  addOnReasons: Record<string, string>
+  serviceReason: string
+  /** Findings we can't address with detailing (existing damage, etc). */
+  cautions: string[]
+  /** Plain-language findings pulled straight from the inspection, used to
+   * justify the condition line on the estimate. */
+  findings: string[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Clients & vehicles
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface ClientRecord {
+  id: string
+  name: string
+  phone: string
+  email: string
+  address: string
+  notes: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** The in-progress client fields on the calculator form, before they've
+ * been saved (and assigned an id) to the client database. */
+export type ClientDraft = Omit<ClientRecord, 'id' | 'createdAt' | 'updatedAt'> & { id: string | null }
+
+export interface VehicleInfo {
+  year: string
+  make: string
+  model: string
+  color: string
+  mileage: string
+  vin: string
+  licensePlate: string
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Photos
+// ─────────────────────────────────────────────────────────────────────────
+
+export type PhotoCategory = 'before' | 'after' | 'damage'
+
+export interface EstimatePhoto {
+  id: string
+  category: PhotoCategory
+  dataUrl: string
+  createdAt: string
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Estimate selections + results
+// ─────────────────────────────────────────────────────────────────────────
 
 /** Selected state driven entirely by the UI — mirrors the calculator form. */
 export interface EstimateSelections {
@@ -99,27 +238,18 @@ export interface EstimateSelections {
   customDiscountPercent: number
 }
 
-export interface ClientInfo {
-  clientName: string
-  vehicleYear: string
-  vehicleMake: string
-  vehicleModel: string
-  vehicleColor: string
-  licensePlate: string
-  notes: string
-}
-
 export interface EstimateLineItem {
   label: string
   amount: number
+  factors?: string[]
 }
 
 export interface EstimateResult {
   baseService: EstimateLineItem
-  vehicleTypeAdjustment: EstimateLineItem
-  vehicleSizeAdjustment: EstimateLineItem
-  conditionAdjustment: EstimateLineItem
-  addOnLineItems: EstimateLineItem[]
+  vehicleComplexity: EstimateLineItem
+  sizeAccess: EstimateLineItem
+  conditionFindings: EstimateLineItem
+  addOnLineItems: (EstimateLineItem & { reason?: string })[]
   addOnsTotal: number
   travelFee: number
   travelMilesBilled: number
@@ -127,11 +257,16 @@ export interface EstimateResult {
   discountLabel: string
   discountAmount: number
   total: number
+
+  // Internal-only — never rendered on the client-facing estimate.
   laborHours: number
   teamSize: number
   teamSizeLabel: string
   appointmentLengthHours: number
-  referenceLaborCost: number
+  laborCost: number
+  chemicalCost: number
+  grossProfit: number
+  marginPercent: number
 }
 
 /** A fully saved estimate, persisted to localStorage. */
@@ -139,7 +274,11 @@ export interface SavedEstimate {
   id: string
   estimateNumber: string
   createdAt: string
-  client: ClientInfo
+  clientId: string | null
+  client: ClientRecord
+  vehicle: VehicleInfo
+  inspection: InspectionState
   selections: EstimateSelections
   result: EstimateResult
+  photos: EstimatePhoto[]
 }

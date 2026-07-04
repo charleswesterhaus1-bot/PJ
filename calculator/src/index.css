@@ -105,6 +105,16 @@ body {
   color: transparent;
 }
 
+.hh-glass-interactive {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.hh-glass-interactive:hover {
+  border-color: rgba(201, 162, 39, 0.3);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 24px 48px -20px rgba(0, 0, 0, 0.65);
+}
+
 .hh-divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.4), transparent);
@@ -150,29 +160,27 @@ body {
   animation: hh-shimmer 2.4s ease-in-out infinite;
 }
 
+/* Print output lives in #print-root, a React portal target that's a
+   sibling of #root — NOT a descendant of it. This deliberately sidesteps
+   the app's animated (transformed) ancestors: an element with any CSS
+   `transform` becomes a new containing block for its descendants, which
+   silently breaks `position: fixed`/`absolute` print-only overlays nested
+   inside framer-motion components. Rendering the print markup as a fully
+   separate tree avoids that class of bug entirely. */
+#print-root {
+  display: none;
+}
+
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #hh-print-area,
-  #hh-print-area * {
-    visibility: visible;
-  }
-  #hh-print-area {
-    position: absolute;
-    inset: 0;
-    padding: 32px;
-  }
-  #hh-print-area,
-  #hh-print-area * {
-    color: #111827 !important;
+  html,
+  body {
     background: #fff !important;
-    background-image: none !important;
-    box-shadow: none !important;
-    border-color: #d1d5db !important;
-    backdrop-filter: none !important;
   }
-  #hh-print-area [data-print-hide] {
+  #root,
+  .hh-app-background {
     display: none !important;
+  }
+  #print-root {
+    display: block !important;
   }
 }

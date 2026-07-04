@@ -1,10 +1,19 @@
-// Top bar: brand mark, internal-tool label, and Calculator/History nav.
+// Top bar: brand mark, internal-tool label, and page nav. Nav items are
+// data-driven — adding a future module (Yachts, Scheduling, CRM, …) once
+// its feature flag flips on on is just another entry in NAV_ITEMS plus a
+// case in App.tsx's page switch, not a structural change here.
 
 import { Calculator, History } from 'lucide-react'
 import { motion } from 'framer-motion'
+import type { ReactNode } from 'react'
 import { pricingConfig } from '../../config/pricingConfig'
 
 export type Page = 'calculator' | 'history'
+
+const NAV_ITEMS: { id: Page; label: string; icon: ReactNode }[] = [
+  { id: 'calculator', label: 'Calculator', icon: <Calculator className="h-4 w-4" /> },
+  { id: 'history', label: 'Estimates', icon: <History className="h-4 w-4" /> },
+]
 
 interface HeaderProps {
   page: Page
@@ -26,12 +35,11 @@ export function Header({ page, onNavigate }: HeaderProps) {
         </div>
 
         <nav className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1">
-          <NavButton active={page === 'calculator'} onClick={() => onNavigate('calculator')} icon={<Calculator className="h-4 w-4" />}>
-            Calculator
-          </NavButton>
-          <NavButton active={page === 'history'} onClick={() => onNavigate('history')} icon={<History className="h-4 w-4" />}>
-            Estimates
-          </NavButton>
+          {NAV_ITEMS.map((item) => (
+            <NavButton key={item.id} active={page === item.id} onClick={() => onNavigate(item.id)} icon={item.icon}>
+              {item.label}
+            </NavButton>
+          ))}
         </nav>
       </div>
     </header>
@@ -46,8 +54,8 @@ function NavButton({
 }: {
   active: boolean
   onClick: () => void
-  icon: React.ReactNode
-  children: React.ReactNode
+  icon: ReactNode
+  children: ReactNode
 }) {
   return (
     <button

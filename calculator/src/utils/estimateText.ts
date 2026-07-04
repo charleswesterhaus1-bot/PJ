@@ -1,9 +1,10 @@
 // Builds a clean, plain-text version of an estimate for the "Copy Estimate"
 // button — suitable for pasting into an email, text message, or CRM note.
+// Client-facing only: no labor hours, team size, or cost/margin figures.
 
-import type { ClientInfo, EstimateResult, EstimateSelections } from '../types'
+import type { EstimateResult, EstimateSelections, VehicleInfo } from '../types'
 import { pricingConfig } from '../config/pricingConfig'
-import { formatCurrency, formatDate, formatHours } from './format'
+import { formatCurrency, formatDate, formatSignedCurrency } from './format'
 
 function findLabel(id: string, items: { id: string; label: string }[]): string {
   return items.find((i) => i.id === id)?.label ?? id
@@ -12,31 +13,40 @@ function findLabel(id: string, items: { id: string; label: string }[]): string {
 export function buildEstimateText(
   estimateNumber: string,
   createdAt: string,
-  client: ClientInfo,
+  client: { name: string; notes: string },
+  vehicle: VehicleInfo,
   selections: EstimateSelections,
   result: EstimateResult,
 ): string {
-  const vehicleLine = [client.vehicleYear, client.vehicleMake, client.vehicleModel].filter(Boolean).join(' ')
+  const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
 
   const lines: string[] = []
   lines.push(`${pricingConfig.company.name} — Estimate ${estimateNumber}`)
   lines.push(formatDate(createdAt))
   lines.push('')
-  if (client.clientName) lines.push(`Client: ${client.clientName}`)
-  if (vehicleLine) lines.push(`Vehicle: ${vehicleLine}${client.vehicleColor ? ` (${client.vehicleColor})` : ''}`)
-  if (client.licensePlate) lines.push(`Plate: ${client.licensePlate}`)
-  lines.push(`Type: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
+  if (client.name) lines.push(`Client: ${client.name}`)
+  if (vehicleLine) lines.push(`Vehicle: ${vehicleLine}${vehicle.color ? ` (${vehicle.color})` : ''}`)
+  if (vehicle.licensePlate) lines.push(`Plate: ${vehicle.licensePlate}`)
+  lines.push(`Classification: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
   lines.push(`Size: ${findLabel(selections.vehicleSizeId, pricingConfig.vehicleSizes)}`)
   lines.push(`Condition: ${findLabel(selections.conditionId, pricingConfig.conditions)}`)
   lines.push('')
   lines.push('— Pricing —')
   lines.push(`Base Service (${result.baseService.label}): ${formatCurrency(result.baseService.amount)}`)
-  lines.push(`Vehicle Type Adjustment: ${formatCurrency(result.vehicleTypeAdjustment.amount)}`)
-  lines.push(`Vehicle Size Adjustment: ${formatCurrency(result.vehicleSizeAdjustment.amount)}`)
-  lines.push(`Condition Adjustment: ${formatCurrency(result.conditionAdjustment.amount)}`)
+  lines.push(`Vehicle Complexity — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
+  if (result.vehicleComplexity.factors?.length) lines.push(`  ${result.vehicleComplexity.factors.join(' · ')}`)
+  if (result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) {
+    lines.push(`Size & Access — ${result.sizeAccess.label}: ${formatSignedCurrency(result.sizeAccess.amount)}`)
+    if (result.sizeAccess.factors?.length) lines.push(`  ${result.sizeAccess.factors.join(' · ')}`)
+  }
+  lines.push(`Condition & Findings — ${result.conditionFindings.label}: ${formatSignedCurrency(result.conditionFindings.amount)}`)
+  if (result.conditionFindings.factors?.length) lines.push(`  ${result.conditionFindings.factors.join(' · ')}`)
   if (result.addOnLineItems.length) {
     lines.push('Add-ons:')
-    result.addOnLineItems.forEach((item) => lines.push(`  • ${item.label}: ${formatCurrency(item.amount)}`))
+    result.addOnLineItems.forEach((item) => {
+      lines.push(`  • ${item.label}: ${formatCurrency(item.amount)}`)
+      if (item.reason) lines.push(`    ${item.reason}`)
+    })
   }
   lines.push(`Travel Fee (${result.travelMilesBilled} billable mi): ${formatCurrency(result.travelFee)}`)
   lines.push(`Subtotal: ${formatCurrency(result.subtotal)}`)
@@ -44,11 +54,6 @@ export function buildEstimateText(
     lines.push(`Discount — ${result.discountLabel}: -${formatCurrency(result.discountAmount)}`)
   }
   lines.push(`ESTIMATED TOTAL: ${formatCurrency(result.total)}`)
-  lines.push('')
-  lines.push('— Job Details —')
-  lines.push(`Estimated Labor: ${formatHours(result.laborHours)}`)
-  lines.push(`Suggested Team: ${result.teamSizeLabel}`)
-  lines.push(`Estimated Appointment Length: ${formatHours(result.appointmentLengthHours)}`)
   if (client.notes) {
     lines.push('')
     lines.push(`Notes: ${client.notes}`)

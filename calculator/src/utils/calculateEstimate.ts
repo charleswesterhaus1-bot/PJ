@@ -1,6 +1,7 @@
 // Pure calculation engine — takes the current form selections plus the
-// pricing config and derives every line item shown in the live output.
-// No React, no side effects: easy to unit test and easy to reason about.
+// pricing config and derives every line item shown in the estimate, both
+// client-facing (pricing, "why" explanations) and internal-only
+// (labor/chemical cost, gross profit, margin). No React, no side effects.
 
 import { pricingConfig } from '../config/pricingConfig'
 import type { EstimateResult, EstimateSelections } from '../types'
@@ -14,7 +15,17 @@ function roundToStep(value: number, step: number): number {
   return Math.round(value / step) * step
 }
 
-export function calculateEstimate(selections: EstimateSelections): EstimateResult {
+/**
+ * @param inspectionFindings Plain-language findings (e.g. "Water Spots — Moderate")
+ *   from the inspection, folded into the condition line's justification.
+ * @param addOnReasons Recommendation-engine reasons keyed by add-on id, shown
+ *   as a "why" caption under any add-on that was suggested by the inspection.
+ */
+export function calculateEstimate(
+  selections: EstimateSelections,
+  inspectionFindings: string[] = [],
+  addOnReasons: Record<string, string> = {},
+): EstimateResult {
   const { vehicleTypes, vehicleSizes, conditions, services, addOns, travel, discounts, labor } = pricingConfig
 
   const service = findById(services, selections.serviceId) ?? services[0]
@@ -25,15 +36,15 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
   // Base service, then each adjustment is shown as the incremental dollar
   // amount it contributes, even though under the hood it's a multiplier
   // stacked on the running price — this keeps the breakdown itemized and
-  // readable for whoever is quoting the client.
+  // justified for whoever is reading the estimate.
   const basePrice = service.basePrice
   const afterVehicleType = basePrice * vehicleType.multiplier
   const afterSize = afterVehicleType * vehicleSize.multiplier
   const afterCondition = afterSize * condition.multiplier
 
-  const vehicleTypeAdjustmentAmount = afterVehicleType - basePrice
-  const vehicleSizeAdjustmentAmount = afterSize - afterVehicleType
-  const conditionAdjustmentAmount = afterCondition - afterSize
+  const vehicleComplexityAmount = afterVehicleType - basePrice
+  const sizeAccessAmount = afterSize - afterVehicleType
+  const conditionFindingsAmount = afterCondition - afterSize
 
   const adjustedBase = afterCondition
 
@@ -42,7 +53,11 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
     .map((id) => findById(addOns, id))
     .filter((a): a is NonNullable<typeof a> => Boolean(a))
 
-  const addOnLineItems = selectedAddOns.map((addOn) => ({ label: addOn.label, amount: addOn.price }))
+  const addOnLineItems = selectedAddOns.map((addOn) => ({
+    label: addOn.label,
+    amount: addOn.price,
+    reason: addOnReasons[addOn.id],
+  }))
   const addOnsTotal = selectedAddOns.reduce((sum, addOn) => sum + addOn.price, 0)
 
   // Travel
@@ -87,13 +102,31 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
     roundToStep(rawAppointmentLength, labor.appointmentRoundingHours),
   )
 
-  const referenceLaborCost = laborHours * labor.ratePerHour
+  // Internal profitability — never shown on a client-facing estimate.
+  const laborCost = laborHours * labor.ratePerHour
+  const scaledServiceChemicalCost = service.chemicalCost * vehicleSize.multiplier * condition.multiplier
+  const addOnChemicalCost = selectedAddOns.reduce((sum, addOn) => sum + addOn.chemicalCost, 0)
+  const chemicalCost = scaledServiceChemicalCost + addOnChemicalCost
+  const grossProfit = total - laborCost - chemicalCost
+  const marginPercent = total > 0 ? grossProfit / total : 0
 
   return {
     baseService: { label: service.label, amount: basePrice },
-    vehicleTypeAdjustment: { label: vehicleType.label, amount: vehicleTypeAdjustmentAmount },
-    vehicleSizeAdjustment: { label: vehicleSize.label, amount: vehicleSizeAdjustmentAmount },
-    conditionAdjustment: { label: condition.label, amount: conditionAdjustmentAmount },
+    vehicleComplexity: {
+      label: vehicleType.label,
+      amount: vehicleComplexityAmount,
+      factors: vehicleType.factors,
+    },
+    sizeAccess: {
+      label: vehicleSize.label,
+      amount: sizeAccessAmount,
+      factors: vehicleSize.factors,
+    },
+    conditionFindings: {
+      label: condition.label,
+      amount: conditionFindingsAmount,
+      factors: [...(condition.factors ?? []), ...inspectionFindings],
+    },
     addOnLineItems,
     addOnsTotal,
     travelFee,
@@ -106,7 +139,10 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
     teamSize,
     teamSizeLabel,
     appointmentLengthHours,
-    referenceLaborCost,
+    laborCost,
+    chemicalCost,
+    grossProfit,
+    marginPercent,
   }
 }
 

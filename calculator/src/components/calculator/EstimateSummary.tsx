@@ -1,22 +1,31 @@
-// The live-updating output panel: itemized pricing, labor/crew estimates,
-// and the action row (copy / print / export PDF / save). This is also the
-// node captured for print and PDF export (id="hh-print-area").
+// The client-facing estimate. On screen this renders as a dark glass card;
+// for physical printing, a separate light/ink-friendly version is portaled
+// into #print-root (see PrintableEstimate.tsx) — a sibling of #root, not a
+// descendant — so print output can never be affected by this component's
+// own layout/animation, and internal-only figures (labor cost, margin,
+// team size) can never end up on a client's copy since they're simply
+// never passed to either version.
 
-import { useRef, useState } from 'react'
-import { Clipboard, FileDown, Printer, Save, Users, Wrench, Clock3 } from 'lucide-react'
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { Clipboard, FileDown, Printer, Save } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
 import { StatRow } from '../ui/StatRow'
 import { AnimatedNumber } from '../ui/AnimatedNumber'
 import { Button } from '../ui/Button'
-import type { ClientInfo, EstimateResult, EstimateSelections } from '../../types'
-import { formatCurrency, formatDate, formatHours, formatSignedCurrency } from '../../utils/format'
+import { PrintableEstimate } from './PrintableEstimate'
+import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } from '../../types'
+import { formatCurrency, formatDate, formatSignedCurrency } from '../../utils/format'
 import { buildEstimateText } from '../../utils/estimateText'
 import { copyToClipboard } from '../../utils/clipboard'
 import { useToast } from '../../hooks/useToast'
 import { pricingConfig } from '../../config/pricingConfig'
 
+const printRoot = typeof document !== 'undefined' ? document.getElementById('print-root') : null
+
 interface EstimateSummaryProps {
-  client: ClientInfo
+  client: ClientDraft
+  vehicle: VehicleInfo
   selections: EstimateSelections
   result: EstimateResult
   estimateNumber: string
@@ -24,15 +33,15 @@ interface EstimateSummaryProps {
   onSave: () => void
 }
 
-export function EstimateSummary({ client, selections, result, estimateNumber, createdAt, onSave }: EstimateSummaryProps) {
-  const printRef = useRef<HTMLDivElement>(null)
+export function EstimateSummary({ client, vehicle, selections, result, estimateNumber, createdAt, onSave }: EstimateSummaryProps) {
   const { showToast } = useToast()
   const [exporting, setExporting] = useState(false)
 
-  const vehicleLine = [client.vehicleYear, client.vehicleMake, client.vehicleModel].filter(Boolean).join(' ')
+  const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
+  const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
 
   async function handleCopy() {
-    const text = buildEstimateText(estimateNumber, createdAt, client, selections, result)
+    const text = buildEstimateText(estimateNumber, createdAt, client, vehicle, selections, result)
     const ok = await copyToClipboard(text)
     showToast(ok ? 'Estimate copied to clipboard' : 'Could not copy estimate', ok ? 'success' : 'error')
   }
@@ -42,11 +51,10 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
   }
 
   async function handleExportPdf() {
-    if (!printRef.current) return
     setExporting(true)
     try {
-      const { exportNodeToPdf } = await import('../../utils/pdfExport')
-      await exportNodeToPdf(printRef.current, `${estimateNumber}.pdf`)
+      const { exportEstimateToPdf } = await import('../../utils/pdfExport')
+      await exportEstimateToPdf({ estimateNumber, createdAt, client, vehicle, selections, result }, `${estimateNumber}.pdf`)
       showToast('PDF exported', 'success')
     } catch {
       showToast('Could not export PDF', 'error')
@@ -56,21 +64,27 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
   }
 
   return (
-    <GlassPanel className="sticky top-24 overflow-hidden p-0" delay={0.1}>
-      <div id="hh-print-area" ref={printRef} className="bg-transparent">
+    <GlassPanel className="overflow-hidden p-0" delay={0.1}>
+      {printRoot &&
+        createPortal(
+          <PrintableEstimate client={client} vehicle={vehicle} selections={selections} result={result} estimateNumber={estimateNumber} createdAt={createdAt} />,
+          printRoot,
+        )}
+      <div className="bg-transparent">
         {/* Header */}
         <div className="border-b border-white/10 px-6 py-5">
           <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#C9A227]/80">
             {pricingConfig.company.name} · Estimate {estimateNumber}
           </p>
           <p className="mt-0.5 text-xs text-slate-500">{formatDate(createdAt)}</p>
-          {(client.clientName || vehicleLine) && (
+          {(client.name || vehicleLine) && (
             <div className="mt-3 space-y-0.5 text-sm">
-              {client.clientName && <p className="font-medium text-slate-100">{client.clientName}</p>}
+              {client.name && <p className="font-medium text-slate-100">{client.name}</p>}
               {vehicleLine && (
                 <p className="text-slate-400">
                   {vehicleLine}
-                  {client.vehicleColor ? ` · ${client.vehicleColor}` : ''}
+                  {vehicle.color ? ` · ${vehicle.color}` : ''}
+                  {vehicleTypeLabel ? ` · ${vehicleTypeLabel}` : ''}
                 </p>
               )}
             </div>
@@ -78,12 +92,16 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
         </div>
 
         {/* Total */}
-        <div className="px-6 py-6 text-center">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Estimated Total</p>
+        <div className="relative px-6 py-6 text-center">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C9A227]/15 blur-3xl"
+          />
+          <p className="relative text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Estimated Total</p>
           <AnimatedNumber
             value={result.total}
             format={formatCurrency}
-            className="hh-gold-text block font-serif text-5xl font-bold tracking-tight"
+            className="hh-gold-text relative block font-serif text-5xl font-bold tracking-tight"
           />
         </div>
 
@@ -92,14 +110,22 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
         {/* Itemized breakdown */}
         <div className="px-6 py-4">
           <StatRow label={`Base Service — ${result.baseService.label}`} value={formatCurrency(result.baseService.amount)} />
-          <StatRow label={`Vehicle Type — ${result.vehicleTypeAdjustment.label}`} value={formatSignedCurrency(result.vehicleTypeAdjustment.amount)} muted />
-          <StatRow label={`Vehicle Size — ${result.vehicleSizeAdjustment.label}`} value={formatSignedCurrency(result.vehicleSizeAdjustment.amount)} muted />
-          <StatRow label={`Condition — ${result.conditionAdjustment.label}`} value={formatSignedCurrency(result.conditionAdjustment.amount)} muted />
+
+          <ExplainedRow label={`Vehicle Complexity — ${result.vehicleComplexity.label}`} amount={result.vehicleComplexity.amount} factors={result.vehicleComplexity.factors} />
+
+          {(result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) && (
+            <ExplainedRow label={`Size & Access — ${result.sizeAccess.label}`} amount={result.sizeAccess.amount} factors={result.sizeAccess.factors} />
+          )}
+
+          <ExplainedRow label={`Condition & Findings — ${result.conditionFindings.label}`} amount={result.conditionFindings.amount} factors={result.conditionFindings.factors} />
 
           {result.addOnLineItems.length > 0 && (
-            <div className="mt-2 border-t border-white/5 pt-2">
+            <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
               {result.addOnLineItems.map((item) => (
-                <StatRow key={item.label} label={item.label} value={formatCurrency(item.amount)} muted />
+                <div key={item.label} className="py-1">
+                  <StatRow label={item.label} value={formatCurrency(item.amount)} muted />
+                  {item.reason && <p className="mt-0.5 text-xs italic text-slate-500">{item.reason}</p>}
+                </div>
               ))}
             </div>
           )}
@@ -116,27 +142,6 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
           </div>
         </div>
 
-        <div className="hh-divider mx-6" />
-
-        {/* Labor / crew estimates */}
-        <div className="grid grid-cols-3 gap-2 px-6 py-5 text-center">
-          <div>
-            <Wrench className="mx-auto mb-1 h-4 w-4 text-[#C9A227]" />
-            <p className="text-sm font-semibold text-slate-100">{formatHours(result.laborHours)}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">Labor</p>
-          </div>
-          <div>
-            <Users className="mx-auto mb-1 h-4 w-4 text-[#C9A227]" />
-            <p className="text-sm font-semibold text-slate-100">{result.teamSizeLabel}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">Team</p>
-          </div>
-          <div>
-            <Clock3 className="mx-auto mb-1 h-4 w-4 text-[#C9A227]" />
-            <p className="text-sm font-semibold text-slate-100">{formatHours(result.appointmentLengthHours)}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">Appointment</p>
-          </div>
-        </div>
-
         {client.notes && (
           <>
             <div className="hh-divider mx-6" />
@@ -148,8 +153,7 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
         )}
       </div>
 
-      {/* Actions — excluded from print/export via data-print-hide */}
-      <div data-print-hide className="grid grid-cols-2 gap-2 border-t border-white/10 bg-black/20 p-4">
+      <div className="grid grid-cols-2 gap-2 border-t border-white/10 bg-black/20 p-4">
         <Button variant="secondary" icon={<Clipboard className="h-4 w-4" />} onClick={handleCopy}>
           Copy
         </Button>
@@ -163,10 +167,19 @@ export function EstimateSummary({ client, selections, result, estimateNumber, cr
           Save
         </Button>
       </div>
-      <p data-print-hide className="border-t border-white/5 px-4 py-2.5 text-center text-[10px] tracking-wide text-slate-600">
+      <p className="border-t border-white/5 px-4 py-2.5 text-center text-[10px] tracking-wide text-slate-600">
         <kbd className="text-slate-500">⌘S</kbd> Save · <kbd className="text-slate-500">⌘K</kbd> Copy ·{' '}
         <kbd className="text-slate-500">⌘P</kbd> Print · <kbd className="text-slate-500">⌘N</kbd> New Estimate
       </p>
     </GlassPanel>
+  )
+}
+
+function ExplainedRow({ label, amount, factors }: { label: string; amount: number; factors?: string[] }) {
+  return (
+    <div className="py-1.5">
+      <StatRow label={label} value={formatSignedCurrency(amount)} muted />
+      {factors && factors.length > 0 && <p className="mt-0.5 text-xs text-slate-500">{factors.join(' · ')}</p>}
+    </div>
   )
 }

@@ -13,7 +13,9 @@ export function useSavedEstimates() {
   }, [])
 
   const save = useCallback((estimate: SavedEstimate) => {
-    setEstimates(addEstimate(estimate))
+    const { estimates: updated, ok } = addEstimate(estimate)
+    setEstimates(updated)
+    return ok
   }, [])
 
   const remove = useCallback((id: string) => {

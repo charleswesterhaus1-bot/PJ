@@ -20,7 +20,7 @@ export function TravelAndDiscountForm({ selections, onChange }: TravelAndDiscoun
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       <GlassPanel className="p-6" delay={0.15}>
-        <SectionHeading eyebrow="Step Four" title="Travel" icon={<MapPin className="h-5 w-5" />} />
+        <SectionHeading eyebrow="Step Six" title="Travel" icon={<MapPin className="h-5 w-5" />} />
         <NumberField
           label="Travel Distance (Miles)"
           value={selections.travelMiles}
@@ -31,7 +31,7 @@ export function TravelAndDiscountForm({ selections, onChange }: TravelAndDiscoun
       </GlassPanel>
 
       <GlassPanel className="p-6" delay={0.2}>
-        <SectionHeading eyebrow="Step Five" title="Discount" icon={<Tag className="h-5 w-5" />} />
+        <SectionHeading eyebrow="Step Seven" title="Discount" icon={<Tag className="h-5 w-5" />} />
         <div className="space-y-4">
           <SelectField
             label="Discount Type"

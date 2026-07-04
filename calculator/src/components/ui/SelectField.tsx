@@ -19,7 +19,7 @@ interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>,
 export function SelectField({ label, options, value, onChange, hint, ...rest }: SelectFieldProps) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">{label}</span>
+      {label && <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">{label}</span>}
       <div className="relative">
         <select
           value={value}

@@ -1,6 +1,6 @@
 // A single saved estimate summarized as a compact card in the history list.
 
-import { Trash2, Clipboard } from 'lucide-react'
+import { Trash2, Clipboard, Image as ImageIcon } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
 import { formatCurrency, formatDateShort } from '../../utils/format'
 import { buildEstimateText } from '../../utils/estimateText'
@@ -16,24 +16,30 @@ interface EstimateCardProps {
 
 export function EstimateCard({ estimate, onDelete }: EstimateCardProps) {
   const { showToast } = useToast()
-  const { client, result, selections } = estimate
-  const vehicleLine = [client.vehicleYear, client.vehicleMake, client.vehicleModel].filter(Boolean).join(' ')
+  const { client, vehicle, result, selections, photos } = estimate
+  const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleType = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
 
   async function handleCopy() {
-    const text = buildEstimateText(estimate.estimateNumber, estimate.createdAt, client, selections, result)
+    const text = buildEstimateText(estimate.estimateNumber, estimate.createdAt, client, vehicle, selections, result)
     const ok = await copyToClipboard(text)
     showToast(ok ? 'Estimate copied to clipboard' : 'Could not copy estimate', ok ? 'success' : 'error')
   }
 
   return (
-    <GlassPanel className="flex items-center justify-between gap-4 p-5">
+    <GlassPanel interactive className="flex items-center justify-between gap-4 p-5">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <p className="font-serif text-lg font-semibold text-[#E8CF83]">{estimate.estimateNumber}</p>
           <span className="text-xs text-slate-500">{formatDateShort(estimate.createdAt)}</span>
+          {photos.length > 0 && (
+            <span className="flex items-center gap-1 text-xs text-slate-500">
+              <ImageIcon className="h-3 w-3" />
+              {photos.length}
+            </span>
+          )}
         </div>
-        <p className="truncate text-sm font-medium text-slate-100">{client.clientName || 'Unnamed client'}</p>
+        <p className="truncate text-sm font-medium text-slate-100">{client.name || 'Unnamed client'}</p>
         <p className="truncate text-xs text-slate-400">
           {vehicleLine || 'No vehicle specified'}
           {vehicleType ? ` · ${vehicleType}` : ''}
