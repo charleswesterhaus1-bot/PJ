@@ -1,0 +1,178 @@
+@import 'tailwindcss';
+
+/* ═══════════════════════════════════════════════════════════════════
+   HANGAR & HARBOR — DESIGN TOKENS
+   Navy + matte gold, glassmorphism, editorial serif headings.
+   ═══════════════════════════════════════════════════════════════════ */
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --color-navy-950: #060f1e;
+  --color-navy-900: #0b1b3a;
+  --color-navy-800: #112349;
+  --color-navy-700: #172d5c;
+  --color-navy-600: #223d75;
+
+  --color-gold-500: #c9a227;
+  --color-gold-400: #d9b74d;
+  --color-gold-300: #e8cf83;
+  --color-gold-600: #a3801c;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--color-navy-950);
+}
+
+body {
+  font-family: var(--font-sans);
+  color: #eef1f8;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  min-height: 100svh;
+  isolation: isolate;
+}
+
+::selection {
+  background: rgba(201, 162, 39, 0.35);
+  color: #fff;
+}
+
+/* Slim, brand-tinted scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 162, 39, 0.35) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.3);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.5);
+}
+
+/* Ambient background: navy gradient wash + faint gold vignette. Fixed so it
+   never re-renders/jitters during scroll. */
+.hh-app-background {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201, 162, 39, 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(201, 162, 39, 0.06), transparent 60%),
+    linear-gradient(180deg, var(--color-navy-950) 0%, var(--color-navy-900) 45%, var(--color-navy-950) 100%);
+}
+
+.hh-app-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Glass panel utility */
+.hh-glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(201, 162, 39, 0.16);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+    0 20px 60px -20px rgba(0, 0, 0, 0.6);
+}
+
+.hh-gold-text {
+  background: linear-gradient(120deg, var(--color-gold-300), var(--color-gold-500) 60%, var(--color-gold-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hh-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.4), transparent);
+}
+
+.hh-focus-ring:focus-visible {
+  outline: 2px solid rgba(201, 162, 39, 0.7);
+  outline-offset: 2px;
+}
+
+/* Custom checkbox / radio treatment shared by form controls */
+.hh-input {
+  background: rgba(6, 15, 30, 0.45);
+  border: 1px solid rgba(201, 162, 39, 0.2);
+  color: #f4f1ea;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.hh-input:hover {
+  border-color: rgba(201, 162, 39, 0.4);
+}
+.hh-input:focus {
+  border-color: rgba(201, 162, 39, 0.75);
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+  background: rgba(6, 15, 30, 0.65);
+}
+
+@keyframes hh-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.hh-shimmer {
+  background: linear-gradient(
+    100deg,
+    rgba(201, 162, 39, 0) 30%,
+    rgba(201, 162, 39, 0.35) 50%,
+    rgba(201, 162, 39, 0) 70%
+  );
+  background-size: 200% 100%;
+  animation: hh-shimmer 2.4s ease-in-out infinite;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #hh-print-area,
+  #hh-print-area * {
+    visibility: visible;
+  }
+  #hh-print-area {
+    position: absolute;
+    inset: 0;
+    padding: 32px;
+  }
+  #hh-print-area,
+  #hh-print-area * {
+    color: #111827 !important;
+    background: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    border-color: #d1d5db !important;
+    backdrop-filter: none !important;
+  }
+  #hh-print-area [data-print-hide] {
+    display: none !important;
+  }
+}
