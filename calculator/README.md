@@ -12,6 +12,12 @@ npm run build    # production build → dist/
 npm run preview  # preview the production build
 ```
 
+Prefer not to run a server at all? `npm run build:portable` produces a single
+self-contained `dist-portable/index.html` (JS and CSS inlined) that opens
+directly by double-clicking — no install, no server. Handy for sending to a
+teammate, but the regular `npm run dev`/`build` workflow above is the one to
+use day-to-day.
+
 ## Editing prices
 
 Every number in the app — service prices, vehicle type/size/condition
