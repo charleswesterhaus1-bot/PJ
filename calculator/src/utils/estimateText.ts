@@ -5,6 +5,7 @@
 import type { EstimateResult, EstimateSelections, VehicleInfo } from '../types'
 import { pricingConfig } from '../config/pricingConfig'
 import { formatCurrency, formatDate, formatSignedCurrency } from './format'
+import { buildVehicleHandlingNotes } from './vehicleHandlingNotes'
 
 function findLabel(id: string, items: { id: string; label: string }[]): string {
   return items.find((i) => i.id === id)?.label ?? id
@@ -30,10 +31,16 @@ export function buildEstimateText(
   lines.push(`Classification: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
   lines.push(`Size: ${findLabel(selections.vehicleSizeId, pricingConfig.vehicleSizes)}`)
   lines.push(`Condition: ${findLabel(selections.conditionId, pricingConfig.conditions)}`)
+  const handlingNotes = buildVehicleHandlingNotes(vehicle)
+  if (handlingNotes.length > 0) {
+    lines.push('')
+    lines.push('— Vehicle Handling Notes —')
+    handlingNotes.forEach((note) => lines.push(`  • ${note}`))
+  }
   lines.push('')
   lines.push('— Pricing —')
   lines.push(`Base Service (${result.baseService.label}): ${formatCurrency(result.baseService.amount)}`)
-  lines.push(`Vehicle Complexity — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
+  lines.push(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
   if (result.vehicleComplexity.factors?.length) lines.push(`  ${result.vehicleComplexity.factors.join(' · ')}`)
   if (result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) {
     lines.push(`Size & Access — ${result.sizeAccess.label}: ${formatSignedCurrency(result.sizeAccess.amount)}`)

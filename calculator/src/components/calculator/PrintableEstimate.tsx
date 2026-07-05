@@ -5,6 +5,7 @@
 
 import { pricingConfig } from '../../config/pricingConfig'
 import { formatCurrency, formatDate, formatSignedCurrency } from '../../utils/format'
+import { buildVehicleHandlingNotes } from '../../utils/vehicleHandlingNotes'
 import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } from '../../types'
 
 interface PrintableEstimateProps {
@@ -19,12 +20,13 @@ interface PrintableEstimateProps {
 export function PrintableEstimate({ client, vehicle, selections, result, estimateNumber, createdAt }: PrintableEstimateProps) {
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
+  const handlingNotes = buildVehicleHandlingNotes(vehicle)
 
   return (
     <div className="mx-auto max-w-2xl bg-white px-10 py-10 text-[#1a1d29]" style={{ fontFamily: 'Georgia, serif' }}>
       <div className="mb-6 border-b-2 border-[#0B1B3A] pb-4">
         <p className="text-2xl font-bold tracking-wide text-[#0B1B3A]">{pricingConfig.company.name.toUpperCase()}</p>
-        <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-gray-500">Exotic &amp; High-Performance Vehicle Detailing</p>
+        <p className="mt-0.5 text-[10px] uppercase tracking-[0.2em] text-gray-500">{pricingConfig.company.tagline}</p>
         <div className="mt-3 flex justify-between text-sm">
           <span className="font-semibold">Estimate {estimateNumber}</span>
           <span className="text-gray-500">{formatDate(createdAt)}</span>
@@ -44,6 +46,19 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
         </div>
       )}
 
+      {handlingNotes.length > 0 && (
+        <div className="mb-6 border-t border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">Vehicle Handling Notes</p>
+          <ul className="space-y-0.5">
+            {handlingNotes.map((note) => (
+              <li key={note} className="text-xs text-amber-800">
+                {note}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="mb-6 border-t border-gray-200 pt-6 text-center">
         <p className="text-[10px] uppercase tracking-[0.2em] text-gray-500">Estimated Total</p>
         <p className="mt-1 text-4xl font-bold text-[#8a6a15]">{formatCurrency(result.total)}</p>
@@ -54,7 +69,7 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
 
         <Row label={`Base Service — ${result.baseService.label}`} value={formatCurrency(result.baseService.amount)} />
 
-        <Row label={`Vehicle Complexity — ${result.vehicleComplexity.label}`} value={formatSignedCurrency(result.vehicleComplexity.amount)} muted />
+        <Row label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} value={formatSignedCurrency(result.vehicleComplexity.amount)} muted />
         {result.vehicleComplexity.factors && result.vehicleComplexity.factors.length > 0 && <Note text={result.vehicleComplexity.factors.join(' · ')} />}
 
         {(result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) && (

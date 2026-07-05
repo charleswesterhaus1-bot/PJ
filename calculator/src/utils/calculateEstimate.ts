@@ -1,10 +1,11 @@
 // Pure calculation engine — takes the current form selections plus the
 // pricing config and derives every line item shown in the estimate, both
 // client-facing (pricing, "why" explanations) and internal-only
-// (labor/chemical cost, gross profit, margin). No React, no side effects.
+// (labor/chemical/travel cost, gross profit, margin). No React, no side
+// effects.
 
 import { pricingConfig } from '../config/pricingConfig'
-import type { EstimateResult, EstimateSelections } from '../types'
+import type { EstimateResult, EstimateSelections, VehicleSizeId } from '../types'
 
 function findById<T extends { id: string }>(items: T[], id: string): T | undefined {
   return items.find((item) => item.id === id)
@@ -33,18 +34,19 @@ export function calculateEstimate(
   const vehicleSize = findById(vehicleSizes, selections.vehicleSizeId) ?? vehicleSizes[0]
   const condition = findById(conditions, selections.conditionId) ?? conditions[0]
 
-  // Base service, then each adjustment is shown as the incremental dollar
-  // amount it contributes, even though under the hood it's a multiplier
-  // stacked on the running price — this keeps the breakdown itemized and
-  // justified for whoever is reading the estimate.
-  const basePrice = service.basePrice
-  const afterVehicleType = basePrice * vehicleType.multiplier
-  const afterSize = afterVehicleType * vehicleSize.multiplier
-  const afterCondition = afterSize * condition.multiplier
+  // Pricing is looked up per size directly (not a flat base × multiplier —
+  // real size pricing isn't a clean ratio across every package). "Medium"
+  // is the anchor shown as the Base Service line; the chosen size's dollar
+  // difference from that anchor is the Size & Access line.
+  const sizeId = vehicleSize.id as VehicleSizeId
+  const basePrice = service.basePriceBySize.medium
+  const afterSize = service.basePriceBySize[sizeId] ?? basePrice
+  const afterVehicleType = afterSize * vehicleType.multiplier
+  const afterCondition = afterVehicleType * condition.multiplier
 
-  const vehicleComplexityAmount = afterVehicleType - basePrice
-  const sizeAccessAmount = afterSize - afterVehicleType
-  const conditionFindingsAmount = afterCondition - afterSize
+  const sizeAccessAmount = afterSize - basePrice
+  const vehicleComplexityAmount = afterVehicleType - afterSize
+  const conditionFindingsAmount = afterCondition - afterVehicleType
 
   const adjustedBase = afterCondition
 
@@ -107,8 +109,13 @@ export function calculateEstimate(
   const scaledServiceChemicalCost = service.chemicalCost * vehicleSize.multiplier * condition.multiplier
   const addOnChemicalCost = selectedAddOns.reduce((sum, addOn) => sum + addOn.chemicalCost, 0)
   const chemicalCost = scaledServiceChemicalCost + addOnChemicalCost
-  const grossProfit = total - laborCost - chemicalCost
+  // Fuel/vehicle-wear cost accrues for the whole trip, not just the miles
+  // billed to the client beyond the free radius.
+  const travelCost = selections.travelMiles * labor.travelCostPerMile
+  const grossProfit = total - laborCost - chemicalCost - travelCost
   const marginPercent = total > 0 ? grossProfit / total : 0
+  const revenuePerLaborHour = laborHours > 0 ? total / laborHours : 0
+  const belowMarginWarning = marginPercent < labor.marginWarningThreshold
 
   return {
     baseService: { label: service.label, amount: basePrice },
@@ -141,8 +148,11 @@ export function calculateEstimate(
     appointmentLengthHours,
     laborCost,
     chemicalCost,
+    travelCost,
     grossProfit,
     marginPercent,
+    revenuePerLaborHour,
+    belowMarginWarning,
   }
 }
 

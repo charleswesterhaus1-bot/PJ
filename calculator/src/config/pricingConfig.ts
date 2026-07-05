@@ -6,22 +6,18 @@
 // estimates, multipliers, equipment, or discounts anywhere in the app.
 // Every screen reads from this file — nothing is hardcoded elsewhere.
 //
-// Pricing philosophy: base prices below are the "High-End Sports Car,
-// Medium size, Excellent condition" price — our floor. Every other
-// vehicle type, size, and condition multiplies up from there. We are a
-// premium specialist, not a volume shop — these numbers assume healthy
-// margin over labor + product cost, not a race to the bottom.
+// Automotive only, current launch stage. Every service/add-on below uses
+// only equipment we actually own today (see `equipment`) — no ceramic
+// coatings, no deep carpet extraction, nothing that needs gear we don't
+// have yet. `future.yachts`/`future.aircraft` and the `features` flags are
+// scaffolding for later — leave them disabled.
 //
-// `chemicalCost` and the labor rate are internal-only figures used to
-// compute the staff-facing profitability panel. They never appear on a
-// client-facing estimate.
-//
-// Multipliers work like this: 1.0 = no change, 1.25 = +25%, 0.9 = -10%.
-//
-// The `future` section holds pricing scaffolding for yachts and private
-// aviation, and `features` flags other modules we've planned but not
-// built (scheduling, invoicing, CRM, etc). All disabled — flip them on
-// and wire up a page once that line of business actually exists.
+// Services are priced explicitly per vehicle size (Small/Medium/Large)
+// rather than one base price × a multiplier — real size pricing isn't a
+// clean ratio across every package, so each service carries its own
+// `basePriceBySize` table. `chemicalCost` and the labor rate are
+// internal-only figures used to compute the staff-facing profitability
+// panel; they never appear on a client-facing estimate.
 // ═══════════════════════════════════════════════════════════════════════
 
 import type { PricingConfig } from '../types'
@@ -29,86 +25,95 @@ import type { PricingConfig } from '../types'
 export const pricingConfig: PricingConfig = {
   company: {
     name: 'Hangar & Harbor',
-    tagline: 'Exotic & High-Performance Vehicle Detailing — Estimate Console',
+    tagline: 'Premium Automotive Detailing — Estimate Console',
   },
 
   // ─────────────────────────────────────────────────────────────────────
   // EQUIPMENT — what we actually own today. This is the ground truth for
   // which services we can responsibly offer; see `equipmentUsed` on each
-  // service/add-on below.
+  // service/add-on below. A DI water system may be added soon but isn't
+  // required for anything here yet.
   // ─────────────────────────────────────────────────────────────────────
   equipment: [
     {
       category: 'Pressure Washing',
-      items: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Two-Bucket Wash System', 'Grit Guards'],
+      items: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Two-Bucket Wash System'],
     },
     {
       category: 'Wash Equipment',
-      items: ['Premium Wash Mitts', 'Clay Mitt (Nanoskin)', 'Drying Towels', 'Applicator Pads', 'Spray Bottles'],
+      items: ['Premium Wash Mitts', 'Microfiber Towels', 'Chemical Guys Mr. Pink Soap'],
     },
     {
-      category: 'Wheel Equipment',
-      items: ['Wheel Brushes', 'Tire Brushes', 'Lug Nut Brushes', 'Barrel Brushes'],
+      category: 'Decontamination',
+      items: ["Meguiar's Ultimate Iron Remover", 'Nanoskin AutoScrub Clay Mitt'],
     },
     {
-      category: 'Machines',
-      items: ['Maxshine Dual Action Polisher'],
+      category: 'Machines & Polishing',
+      items: ["Griot's Garage G9 Random Orbital Polisher", '3D One Compound/Polish', 'Lake Country Foam Pads'],
     },
     {
-      category: 'Interior Equipment',
-      items: ['Shop Vacuum', 'Steam Cleaner'],
+      category: 'Wheel & Glass Care',
+      items: ['Wheel Cleaner', 'Tire Dressing', 'Glass Cleaner'],
     },
     {
-      category: 'Products',
-      items: [
-        'P&S Xpress Interior Cleaner',
-        'Brake Buster',
-        'CarPro PERL',
-        'Leather Honey',
-        'Invisible Glass',
-        'Plastic Cleaner',
-        '3D One Compound/Polish',
-        'Iron Remover',
-        'Mr Pink Soap',
-      ],
+      category: 'Interior Care',
+      items: ['Interior Cleaners & Protectants', 'Leather Cleaner/Conditioner'],
+    },
+    {
+      category: 'Engine Bay',
+      items: ['Basic Engine Bay Cleaning Supplies'],
     },
   ],
 
+  // A vehicle at or beyond this age classifies as Classic/Collector unless
+  // its make/model already matches a higher-priority tier (see
+  // utils/classifyVehicle.ts).
+  classicVehicleAgeYears: 25,
+
   // ─────────────────────────────────────────────────────────────────────
-  // VEHICLE TYPE — the class of exotic/performance vehicle being serviced.
-  // `classification` drives auto-detection from Make/Model: modelKeywords
-  // are checked first (across all tiers) and win over `makes`, so a
-  // Porsche 918 Spyder classifies as a Hypercar even though Porsche
-  // otherwise requires a specific nameplate match to classify at all.
-  // `factors` are the plain-language reasons printed on the estimate.
+  // VEHICLE CLASSIFICATION — Standard / Luxury / Performance / Supercar /
+  // Classic. `classification` drives auto-detection from Make/Model/Year;
+  // modelKeywords are checked first (across all tiers) and win over
+  // `makes`, so e.g. a Porsche GT3 classifies Supercar even though
+  // "Porsche" alone defaults to Luxury. `factors` are the plain-language
+  // reasons printed on the estimate under "Exotic Vehicle Handling &
+  // Protection".
   // ─────────────────────────────────────────────────────────────────────
   vehicleTypes: [
     {
-      id: 'hypercar',
-      label: 'Hypercar',
-      multiplier: 1.6,
-      description: 'Bugatti, Koenigsegg, Pagani, and other million-dollar limited-production machines',
-      factors: [
-        'Extremely low ground clearance requiring lift-assisted access',
-        'Exposed carbon fiber and specialty finishes',
-        'Limited parts and product-compatibility research required',
-        'Highest handling liability and insurance exposure on site',
-      ],
+      id: 'standard',
+      label: 'Standard',
+      multiplier: 1.0,
+      description: 'Everyday sedans, hatchbacks, and mainstream vehicles',
+      factors: ['Our baseline tier — no handling surcharge applied'],
       classification: {
-        makes: ['bugatti', 'koenigsegg', 'pagani', 'rimac', 'czinger'],
+        makes: ['toyota', 'honda', 'nissan', 'ford', 'chevrolet', 'hyundai', 'kia', 'mazda', 'subaru', 'volkswagen', 'vw', 'chrysler', 'dodge', 'jeep', 'ram', 'gmc', 'buick', 'mitsubishi', 'fiat', 'mini', 'smart'],
+        modelKeywords: [],
+      },
+    },
+    {
+      id: 'luxury',
+      label: 'Luxury',
+      multiplier: 1.12,
+      description: 'Luxury sedans, SUVs, and premium daily drivers',
+      factors: ['Premium interior materials, additional trim, and larger touchpoints require careful handling'],
+      classification: {
+        makes: ['mercedes-benz', 'mercedes', 'bmw', 'audi', 'lexus', 'genesis', 'cadillac', 'land rover', 'range rover', 'jaguar', 'volvo', 'infiniti', 'porsche', 'maserati', 'aston martin', 'bentley', 'rolls-royce', 'acura'],
+        modelKeywords: ['urus', 'purosangue', 'cullinan', 'bentayga', 'levante', 'ghibli', 'quattroporte', 'dbx'],
+      },
+    },
+    {
+      id: 'performance',
+      label: 'Performance',
+      multiplier: 1.18,
+      description: 'Performance coupes, sport sedans, and enthusiast vehicles',
+      factors: ['Performance wheel and brake designs, lowered stance, and aggressive aero need dedicated attention'],
+      classification: {
+        makes: [],
         modelKeywords: [
-          'laferrari',
-          'senna',
-          'p1',
-          'chiron',
-          'divo',
-          'valkyrie',
-          '918 spyder',
-          'carrera gt',
-          'veneno',
-          'sian',
-          'reventon',
-          'centodieci',
+          'corvette', 'mustang gt', 'shelby', 'camaro ss', 'camaro zl1', 'hellcat', 'trackhawk', 'trx', 'raptor',
+          'wrx', 'sti', 'type r', 'type-r', 'gr86', 'brz', 'gti', 'golf r', 'm2', 'm3', 'm4', 'm5', 'm8',
+          'rs3', 'rs5', 'rs6', 'rs7', 'rsq8', 'amg', 'type s', 'type-s',
         ],
       },
     },
@@ -116,58 +121,41 @@ export const pricingConfig: PricingConfig = {
       id: 'supercar',
       label: 'Supercar',
       multiplier: 1.4,
-      description: 'Ferrari, Lamborghini, and McLaren — the benchmark of exotic performance',
+      description: 'Exotic supercars and hypercars',
       factors: [
-        'Wide-body fitment and low front splitters demand careful product handling',
-        'Complex aerodynamic surfaces and multiple air intakes',
-        'Premium wheel and brake designs need dedicated detailing time',
+        'Additional care required for low-clearance bodywork, delicate finishes, complex aero, carbon fiber, premium wheels, and high-value vehicle handling.',
       ],
       classification: {
-        makes: ['ferrari', 'lamborghini', 'mclaren'],
-        modelKeywords: [],
+        makes: ['ferrari', 'lamborghini', 'mclaren', 'bugatti', 'koenigsegg', 'pagani', 'rimac', 'czinger', 'lotus'],
+        modelKeywords: [
+          'laferrari', 'senna', 'p1', 'chiron', 'divo', 'valkyrie', '918 spyder', 'carrera gt', 'veneno', 'sian',
+          'reventon', 'centodieci', 'mc20', 'gt3', 'gt2', 'turbo s', '911 gt', 'z06', 'zr1', 'gt-r', 'gtr',
+          'amg gt', 'nsx', 'r8',
+        ],
       },
     },
     {
-      id: 'exotic',
-      label: 'Exotic Car',
-      multiplier: 1.25,
-      description: 'Aston Martin, Bentley, Maserati, and other coach-built exotics',
-      factors: [
-        'Bespoke leather, veneer, and trim requiring specialized product knowledge',
-        'Larger GT proportions increase surface area and wipe-down time',
-        'Hand-finished coach-built details add handling care',
-      ],
-      classification: {
-        makes: ['aston martin', 'bentley', 'maserati', 'lotus'],
-        modelKeywords: ['mc20'],
-      },
-    },
-    {
-      id: 'sports',
-      label: 'High-End Sports Car',
-      multiplier: 1.0,
-      description: 'Porsche GT cars, Audi R8, AMG GT, Corvette Z06/ZR1, and Nissan GT-R',
-      factors: ['Our baseline specialization tier — full attention to detail, no complexity surcharge'],
+      id: 'classic',
+      label: 'Classic / Collector',
+      multiplier: 1.3,
+      description: 'Classic and collector vehicles',
+      factors: ['Aged paint, trim, and materials require gentler products and extra handling care for collector value'],
       classification: {
         makes: [],
-        modelKeywords: ['gt3', 'gt2', 'turbo s', '911 gt', 'corvette', 'z06', 'zr1', 'gt-r', 'gtr', 'r8', 'amg gt', 'nsx'],
+        modelKeywords: [],
       },
     },
   ],
 
   // ─────────────────────────────────────────────────────────────────────
-  // VEHICLE SIZE — scales labor/product needs relative to a mid-size car.
+  // VEHICLE SIZE — Small/Medium/Large. Pricing per size lives directly on
+  // each service (`basePriceBySize`); the multiplier here only scales
+  // labor hours and chemical cost, since those genuinely track with size.
   // ─────────────────────────────────────────────────────────────────────
   vehicleSizes: [
-    { id: 'small', label: 'Small', multiplier: 0.92, factors: ['Reduced surface area lowers wash and product time'] },
-    { id: 'medium', label: 'Medium', multiplier: 1.0, factors: [] },
-    { id: 'large', label: 'Large', multiplier: 1.18, factors: ['Additional surface area extends wash and drying time'] },
-    {
-      id: 'xl',
-      label: 'Extra Large',
-      multiplier: 1.35,
-      factors: ['Significant surface area and cabin volume increase labor time'],
-    },
+    { id: 'small', label: 'Small / Coupe', multiplier: 0.9, factors: ['Reduced surface area lowers wash and product time'] },
+    { id: 'medium', label: 'Medium / Sedan / Sports Car', multiplier: 1.0, factors: [] },
+    { id: 'large', label: 'Large / SUV / Truck', multiplier: 1.2, factors: ['Additional surface area and cabin volume extend labor time'] },
   ],
 
   // ─────────────────────────────────────────────────────────────────────
@@ -210,97 +198,57 @@ export const pricingConfig: PricingConfig = {
   ],
 
   // ─────────────────────────────────────────────────────────────────────
-  // SERVICES — the primary package selected for the estimate. Prices are
-  // the High-End Sports Car / Medium / Excellent baseline described above.
+  // SERVICES — the primary package selected for the estimate.
   // ─────────────────────────────────────────────────────────────────────
   services: [
     {
       id: 'maintenance-wash',
       label: 'Premium Maintenance Wash',
-      description: 'Two-bucket hand wash with foam pre-soak, wheels, tires, and a quick detail finish',
-      basePrice: 265,
-      baseLaborHours: 1.75,
-      chemicalCost: 18,
-      equipmentUsed: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Two-Bucket Wash System', 'Premium Wash Mitts', 'Mr Pink Soap'],
+      description:
+        'Foam pre-soak, two-bucket hand wash, wheels and tires, exterior glass, and tire dressing, finished with a quick interior wipe-down/vacuum and a final inspection.',
+      basePriceBySize: { small: 225, medium: 265, large: 325 },
+      baseLaborHours: 1.25,
+      chemicalCost: 22,
+      equipmentUsed: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Two-Bucket Wash System', 'Premium Wash Mitts', 'Chemical Guys Mr. Pink Soap'],
     },
     {
       id: 'exterior-detail',
-      label: 'Premium Exterior Detail',
-      description: 'Full exterior decontamination, hand wash, and a protective dressing pass',
-      basePrice: 525,
-      baseLaborHours: 3.5,
-      chemicalCost: 35,
-      equipmentUsed: ['Two-Bucket Wash System', 'Clay Mitt (Nanoskin)', 'CarPro PERL', 'Wheel Brushes', 'Barrel Brushes'],
+      label: 'Signature Exterior Detail',
+      description:
+        'Maintenance wash foundation plus a deep wheel clean, iron removal and clay mitt treatment as needed, bug/tar attention, exterior glass, and tire dressing. Paint sealant recommended to lock in the finish.',
+      basePriceBySize: { small: 350, medium: 425, large: 525 },
+      baseLaborHours: 2.0,
+      chemicalCost: 42,
+      equipmentUsed: ["Meguiar's Ultimate Iron Remover", 'Nanoskin AutoScrub Clay Mitt', 'Wheel Cleaner', 'Tire Dressing', 'Glass Cleaner'],
     },
     {
       id: 'interior-detail',
-      label: 'Premium Interior Detail',
-      description: 'Full interior deep clean with leather, trim, and glass care',
-      basePrice: 495,
-      baseLaborHours: 3.5,
+      label: 'Signature Interior Detail',
+      description:
+        'Full vacuum and wipe-down, leather and plastic cleaning, interior glass, vents and crevices, door jambs, and attention to light stains. Leather conditioning recommended for leather-equipped cabins.',
+      basePriceBySize: { small: 275, medium: 350, large: 450 },
+      baseLaborHours: 1.65,
       chemicalCost: 32,
-      equipmentUsed: ['Shop Vacuum', 'Steam Cleaner', 'P&S Xpress Interior Cleaner', 'Leather Honey', 'Invisible Glass'],
+      equipmentUsed: ['Interior Cleaners & Protectants', 'Leather Cleaner/Conditioner', 'Glass Cleaner'],
     },
     {
-      id: 'signature-full-detail',
+      id: 'full-detail',
       label: 'Signature Full Detail',
-      description: 'Our complete interior + exterior signature service — the definitive Hangar & Harbor experience',
-      basePrice: 975,
-      baseLaborHours: 7,
-      chemicalCost: 60,
-      equipmentUsed: [
-        'Two-Bucket Wash System',
-        'Clay Mitt (Nanoskin)',
-        'CarPro PERL',
-        'Shop Vacuum',
-        'Steam Cleaner',
-        'Leather Honey',
-      ],
+      description: 'Our Signature Exterior Detail and Signature Interior Detail combined — the complete Hangar & Harbor experience, inside and out.',
+      basePriceBySize: { small: 575, medium: 700, large: 875 },
+      baseLaborHours: 3.25,
+      chemicalCost: 70,
+      equipmentUsed: ['Two-Bucket Wash System', "Meguiar's Ultimate Iron Remover", 'Nanoskin AutoScrub Clay Mitt', 'Interior Cleaners & Protectants', 'Leather Cleaner/Conditioner'],
     },
     {
       id: 'paint-enhancement',
-      label: 'Paint Enhancement (One-Step Polish)',
-      description: 'Single-stage machine polish to remove light swirls and restore deep gloss',
-      basePrice: 795,
-      baseLaborHours: 5.5,
-      chemicalCost: 55,
-      equipmentUsed: ['Maxshine Dual Action Polisher', '3D One Compound/Polish', 'Applicator Pads'],
-    },
-    {
-      id: 'paint-correction',
-      label: 'Paint Correction',
-      description: 'Multi-stage machine correction for swirl marks, scratches, and oxidation',
-      basePrice: 1850,
-      baseLaborHours: 14,
+      label: 'Paint Enhancement Detail',
+      description:
+        "Wash and chemical/mechanical decontamination, followed by a one-step machine polish using the Griot's G9, 3D One compound, and Lake Country pads. Paint sealant included to protect the finish, with a final inspection.",
+      basePriceBySize: { small: 650, medium: 800, large: 1000 },
+      baseLaborHours: 3.75,
       chemicalCost: 95,
-      equipmentUsed: ['Maxshine Dual Action Polisher', '3D One Compound/Polish', 'Clay Mitt (Nanoskin)', 'Applicator Pads'],
-    },
-    {
-      id: 'engine-bay-detail',
-      label: 'Engine Bay Detail',
-      description: 'Degreased, dressed, and detailed engine bay presentation',
-      basePrice: 245,
-      baseLaborHours: 1.75,
-      chemicalCost: 22,
-      equipmentUsed: ['Brake Buster', 'Plastic Cleaner'],
-    },
-    {
-      id: 'leather-treatment',
-      label: 'Leather Treatment',
-      description: 'Deep clean, condition, and protect every leather surface in the cabin',
-      basePrice: 215,
-      baseLaborHours: 1.5,
-      chemicalCost: 20,
-      equipmentUsed: ['Leather Honey', 'P&S Xpress Interior Cleaner'],
-    },
-    {
-      id: 'headlight-restoration',
-      label: 'Headlight Restoration',
-      description: 'Machine-restored clarity with a UV-protective finish',
-      basePrice: 185,
-      baseLaborHours: 1.25,
-      chemicalCost: 15,
-      equipmentUsed: ['Maxshine Dual Action Polisher', '3D One Compound/Polish', 'Invisible Glass'],
+      equipmentUsed: ["Griot's Garage G9 Random Orbital Polisher", '3D One Compound/Polish', 'Lake Country Foam Pads', 'Nanoskin AutoScrub Clay Mitt'],
     },
   ],
 
@@ -308,19 +256,27 @@ export const pricingConfig: PricingConfig = {
   // ADD-ONS — flat-priced extras layered on top of the primary service.
   // ─────────────────────────────────────────────────────────────────────
   addOns: [
-    { id: 'clay-bar', label: 'Clay Bar Decontamination', price: 145, laborHours: 1, chemicalCost: 12, equipmentUsed: ['Clay Mitt (Nanoskin)'] },
-    { id: 'iron-removal', label: 'Iron Removal', price: 110, laborHours: 0.75, chemicalCost: 14, equipmentUsed: ['Iron Remover'] },
-    { id: 'leather-conditioning', label: 'Leather Conditioning', price: 125, laborHours: 0.75, chemicalCost: 10, equipmentUsed: ['Leather Honey'] },
-    { id: 'engine-bay', label: 'Engine Bay Detail', price: 195, laborHours: 1.25, chemicalCost: 18, equipmentUsed: ['Brake Buster', 'Plastic Cleaner'] },
-    { id: 'pet-hair-removal', label: 'Pet Hair Removal', price: 155, laborHours: 1, chemicalCost: 6, equipmentUsed: ['Shop Vacuum'] },
-    { id: 'odor-treatment', label: 'Odor Treatment', price: 175, laborHours: 1, chemicalCost: 15, equipmentUsed: ['Steam Cleaner'] },
-    { id: 'steam-cleaning', label: 'Steam Cleaning', price: 195, laborHours: 1.5, chemicalCost: 8, equipmentUsed: ['Steam Cleaner'] },
-    { id: 'headlight-restoration', label: 'Headlight Restoration', price: 175, laborHours: 1, chemicalCost: 12, equipmentUsed: ['Maxshine Dual Action Polisher', '3D One Compound/Polish'] },
-    { id: 'glass-sealant', label: 'Glass Sealant', price: 110, laborHours: 0.5, chemicalCost: 9, equipmentUsed: ['Invisible Glass'] },
-    { id: 'trim-restoration', label: 'Trim Restoration', price: 185, laborHours: 1, chemicalCost: 11, equipmentUsed: ['Plastic Cleaner'] },
-    { id: 'interior-protectant', label: 'Interior Protectant', price: 135, laborHours: 0.75, chemicalCost: 10, equipmentUsed: ['P&S Xpress Interior Cleaner', 'Plastic Cleaner'] },
-    { id: 'wheel-ceramic-coating', label: 'Wheel Ceramic Coating', price: 450, laborHours: 2.5, chemicalCost: 85, equipmentUsed: ['Wheel Brushes', 'Barrel Brushes', 'CarPro PERL'] },
-    { id: 'paint-sealant', label: 'Paint Sealant', price: 325, laborHours: 1.5, chemicalCost: 45, equipmentUsed: ['Applicator Pads', 'CarPro PERL'] },
+    { id: 'engine-bay', label: 'Engine Bay Detail', price: 150, laborHours: 1.25, chemicalCost: 15, equipmentUsed: ['Basic Engine Bay Cleaning Supplies'] },
+    {
+      id: 'ext-decon-package',
+      label: 'Exterior Decontamination Package',
+      description: 'Includes iron removal and clay mitt treatment',
+      price: 225,
+      laborHours: 1.75,
+      chemicalCost: 20,
+      equipmentUsed: ["Meguiar's Ultimate Iron Remover", 'Nanoskin AutoScrub Clay Mitt'],
+    },
+    { id: 'iron-removal', label: 'Iron Removal Only', price: 110, laborHours: 0.75, chemicalCost: 12, equipmentUsed: ["Meguiar's Ultimate Iron Remover"] },
+    { id: 'clay-decon', label: 'Clay Decontamination Only', price: 145, laborHours: 1, chemicalCost: 10, equipmentUsed: ['Nanoskin AutoScrub Clay Mitt'] },
+    { id: 'leather-conditioning', label: 'Leather Conditioning', price: 125, laborHours: 0.75, chemicalCost: 10, equipmentUsed: ['Leather Cleaner/Conditioner'] },
+    { id: 'pet-hair-removal', label: 'Pet Hair Removal', price: 155, laborHours: 1, chemicalCost: 6, equipmentUsed: ['Interior Cleaners & Protectants'] },
+    { id: 'odor-treatment', label: 'Odor Treatment', price: 175, laborHours: 1, chemicalCost: 15, equipmentUsed: ['Interior Cleaners & Protectants'] },
+    { id: 'glass-sealant', label: 'Glass Sealant', price: 110, laborHours: 0.5, chemicalCost: 9, equipmentUsed: ['Glass Cleaner'] },
+    { id: 'interior-protectant', label: 'Interior Protectant', price: 135, laborHours: 0.75, chemicalCost: 10, equipmentUsed: ['Interior Cleaners & Protectants'] },
+    { id: 'paint-sealant', label: 'Paint Sealant', price: 250, laborHours: 1.25, chemicalCost: 35, equipmentUsed: ['3D One Compound/Polish', 'Lake Country Foam Pads'] },
+    { id: 'trim-restoration', label: 'Trim Restoration', price: 185, laborHours: 1, chemicalCost: 11, equipmentUsed: ['Interior Cleaners & Protectants'] },
+    { id: 'headlight-restoration', label: 'Headlight Restoration', price: 125, laborHours: 1, chemicalCost: 10, equipmentUsed: ["Griot's Garage G9 Random Orbital Polisher", '3D One Compound/Polish'] },
+    { id: 'wheel-sealant', label: 'Wheel Sealant', price: 175, laborHours: 1.25, chemicalCost: 18, equipmentUsed: ['Wheel Cleaner'] },
   ],
 
   // ─────────────────────────────────────────────────────────────────────
@@ -344,8 +300,9 @@ export const pricingConfig: PricingConfig = {
   ],
 
   // ─────────────────────────────────────────────────────────────────────
-  // LABOR — internal cost rate plus rules for suggested crew size and
-  // rounding of the estimated appointment length. Never shown to clients.
+  // LABOR — internal cost rates plus rules for suggested crew size,
+  // appointment-length rounding, and the staff-only margin warning. Never
+  // shown to clients.
   // ─────────────────────────────────────────────────────────────────────
   labor: {
     ratePerHour: 85,
@@ -356,11 +313,14 @@ export const pricingConfig: PricingConfig = {
       { maxLaborHours: Infinity, teamSize: 4, label: 'Full Crew (4+)' },
     ],
     appointmentRoundingHours: 0.25,
+    travelCostPerMile: 0.67,
+    marginWarningThreshold: 0.45,
   },
 
   // ─────────────────────────────────────────────────────────────────────
-  // FUTURE EXPANSION — scaffolding only. Both stay hidden from the app
-  // until `enabled` is flipped to `true` and real pricing is filled in.
+  // FUTURE EXPANSION — scaffolding only. Automotive-only for this launch
+  // stage; both stay hidden until `enabled` is flipped to `true` and real
+  // pricing is filled in.
   // ─────────────────────────────────────────────────────────────────────
   future: {
     yachts: {

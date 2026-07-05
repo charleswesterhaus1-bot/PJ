@@ -12,12 +12,14 @@
 import jsPDF from 'jspdf'
 import { pricingConfig } from '../config/pricingConfig'
 import { formatCurrency, formatDate, formatSignedCurrency } from './format'
+import { buildVehicleHandlingNotes } from './vehicleHandlingNotes'
 import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } from '../types'
 
 const NAVY: [number, number, number] = [11, 27, 58]
 const GOLD: [number, number, number] = [201, 162, 39]
 const INK: [number, number, number] = [30, 33, 43]
 const MUTED: [number, number, number] = [110, 116, 130]
+const AMBER: [number, number, number] = [146, 100, 15]
 
 const PAGE_WIDTH = 612
 const PAGE_HEIGHT = 792
@@ -52,7 +54,7 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(8.5)
     doc.setTextColor(200, 205, 215)
-    doc.text('EXOTIC & HIGH-PERFORMANCE VEHICLE DETAILING', MARGIN, 58)
+    doc.text(pricingConfig.company.tagline.toUpperCase(), MARGIN, 58)
 
     doc.setTextColor(...GOLD)
     doc.setFontSize(11)
@@ -134,6 +136,26 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
     y += 8
   }
 
+  const handlingNotes = buildVehicleHandlingNotes(vehicle)
+  if (handlingNotes.length > 0) {
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.setTextColor(...AMBER)
+    ensureSpace(14)
+    doc.text('VEHICLE HANDLING NOTES', MARGIN, y)
+    y += 13
+    doc.setFont('helvetica', 'italic')
+    doc.setFontSize(8.5)
+    doc.setTextColor(...AMBER)
+    for (const note of handlingNotes) {
+      const lines = doc.splitTextToSize(`• ${note}`, CONTENT_WIDTH)
+      ensureSpace(lines.length * 11)
+      doc.text(lines, MARGIN, y)
+      y += lines.length * 11 + 2
+    }
+    y += 6
+  }
+
   divider()
 
   // Total, prominent
@@ -154,7 +176,7 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
   sectionLabel('Pricing')
   priceRow(`Base Service — ${result.baseService.label}`, formatCurrency(result.baseService.amount))
 
-  priceRow(`Vehicle Complexity — ${result.vehicleComplexity.label}`, formatSignedCurrency(result.vehicleComplexity.amount), { muted: true })
+  priceRow(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`, formatSignedCurrency(result.vehicleComplexity.amount), { muted: true })
   if (result.vehicleComplexity.factors?.length) wrappedNote(result.vehicleComplexity.factors.join(' · '))
 
   if (result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) {

@@ -8,7 +8,7 @@
 
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Clipboard, FileDown, Printer, Save } from 'lucide-react'
+import { Clipboard, FileDown, Printer, Save, TriangleAlert } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
 import { StatRow } from '../ui/StatRow'
 import { AnimatedNumber } from '../ui/AnimatedNumber'
@@ -18,6 +18,7 @@ import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } fro
 import { formatCurrency, formatDate, formatSignedCurrency } from '../../utils/format'
 import { buildEstimateText } from '../../utils/estimateText'
 import { copyToClipboard } from '../../utils/clipboard'
+import { buildVehicleHandlingNotes } from '../../utils/vehicleHandlingNotes'
 import { useToast } from '../../hooks/useToast'
 import { pricingConfig } from '../../config/pricingConfig'
 
@@ -39,6 +40,7 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
+  const handlingNotes = buildVehicleHandlingNotes(vehicle)
 
   async function handleCopy() {
     const text = buildEstimateText(estimateNumber, createdAt, client, vehicle, selections, result)
@@ -91,6 +93,22 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
           )}
         </div>
 
+        {handlingNotes.length > 0 && (
+          <div className="border-b border-white/10 bg-amber-400/[0.04] px-6 py-3">
+            <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
+              <TriangleAlert className="h-3 w-3" />
+              Vehicle Handling Notes
+            </p>
+            <ul className="space-y-1">
+              {handlingNotes.map((note) => (
+                <li key={note} className="text-xs text-amber-200/80">
+                  {note}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {/* Total */}
         <div className="relative px-6 py-6 text-center">
           <div
@@ -111,7 +129,7 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
         <div className="px-6 py-4">
           <StatRow label={`Base Service — ${result.baseService.label}`} value={formatCurrency(result.baseService.amount)} />
 
-          <ExplainedRow label={`Vehicle Complexity — ${result.vehicleComplexity.label}`} amount={result.vehicleComplexity.amount} factors={result.vehicleComplexity.factors} />
+          <ExplainedRow label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} amount={result.vehicleComplexity.amount} factors={result.vehicleComplexity.factors} />
 
           {(result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) && (
             <ExplainedRow label={`Size & Access — ${result.sizeAccess.label}`} amount={result.sizeAccess.amount} factors={result.sizeAccess.factors} />

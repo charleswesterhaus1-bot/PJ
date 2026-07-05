@@ -1,76 +1,51 @@
-// Auto-classifies a vehicle into Hypercar / Supercar / Exotic / High-End
-// Sports Car from its Make + Model, using the classification rules in
-// pricingConfig.vehicleTypes. Falls back to `null` (manual selection
-// required) rather than guessing when we don't recognize the vehicle —
-// better to ask than to misprice a job.
+// Classifies a vehicle into Standard / Luxury / Performance / Supercar /
+// Classic from its Make + Model + Year, using the rules in
+// pricingConfig.vehicleTypes. Unlike earlier versions of this calculator,
+// every vehicle gets a tier — Hangar & Harbor's automotive launch serves
+// everyday cars alongside exotics, so there's no "unsupported" case to warn
+// about anymore, just a pricing multiplier that reflects the work involved.
 //
-// Model keywords win over make-level defaults across ALL tiers, so a
-// Porsche 918 Spyder classifies as a Hypercar even though "Porsche" alone
-// isn't in any tier's blanket make list.
+// Model keywords win over make-level defaults across ALL tiers (so a
+// Porsche 911 GT3 classifies Supercar even though "Porsche" alone defaults
+// to Luxury). Age-based Classic/Collector detection only applies when the
+// make isn't already a dedicated supercar brand — an old Ferrari stays a
+// Ferrari, pricing-wise.
 
 import { pricingConfig } from '../config/pricingConfig'
 
-// Nameplates outside our current specialization (daily drivers, luxury
-// SUVs/sedans, trucks). Matching one shows a warning banner rather than
-// silently blocking — staff can still override and proceed.
-const UNSUPPORTED_KEYWORDS = [
-  'urus',
-  'purosangue',
-  'cullinan',
-  'bentayga',
-  'levante',
-  'ghibli',
-  'quattroporte',
-  'dbx',
-  'cayenne',
-  'macan',
-  'panamera',
-  'g-wagon',
-  'gwagen',
-  'g550',
-  'escalade',
-  'range rover',
-  'tahoe',
-  'suburban',
-  'explorer',
-  'f-150',
-  'silverado',
-  'camry',
-  'accord',
-  'civic',
-  'corolla',
-  'sentra',
-  'altima',
-  'model 3',
-  'model y',
-  'model x',
-  'model s',
-  'wrangler',
-  '4runner',
-]
+// Checked in this explicit order rather than array order — some tiers'
+// keyword lists can both match the same model text (e.g. "Corvette Z06"
+// contains Performance's generic "corvette" AND Supercar's specific
+// "z06"), and the more specific/elite tier should win regardless of which
+// keyword happens to be a longer substring.
+const MODEL_KEYWORD_PRIORITY = ['supercar', 'performance', 'luxury']
 
-export type ClassificationResult = { vehicleTypeId: string } | { vehicleTypeId: 'unsupported' } | null
-
-export function classifyVehicle(make: string, model: string): ClassificationResult {
+export function classifyVehicle(make: string, model: string, year?: string): string {
   const makeLower = make.trim().toLowerCase()
   const modelLower = model.trim().toLowerCase()
-  if (!makeLower && !modelLower) return null
 
-  for (const type of pricingConfig.vehicleTypes) {
-    if (type.classification.modelKeywords.some((kw) => modelLower.includes(kw))) {
-      return { vehicleTypeId: type.id }
+  for (const tierId of MODEL_KEYWORD_PRIORITY) {
+    const type = pricingConfig.vehicleTypes.find((t) => t.id === tierId)
+    if (type?.classification.modelKeywords.some((kw) => modelLower.includes(kw))) {
+      return type.id
     }
   }
 
-  if (UNSUPPORTED_KEYWORDS.some((kw) => modelLower.includes(kw) || makeLower.includes(kw))) {
-    return { vehicleTypeId: 'unsupported' }
+  const supercarTier = pricingConfig.vehicleTypes.find((t) => t.id === 'supercar')
+  const isSupercarMake = supercarTier?.classification.makes.includes(makeLower) ?? false
+
+  const parsedYear = year ? parseInt(year, 10) : NaN
+  if (!isSupercarMake && Number.isFinite(parsedYear)) {
+    const age = new Date().getFullYear() - parsedYear
+    if (age >= pricingConfig.classicVehicleAgeYears) return 'classic'
   }
 
-  for (const type of pricingConfig.vehicleTypes) {
-    if (type.classification.makes.includes(makeLower)) {
-      return { vehicleTypeId: type.id }
-    }
+  // Priority order matters here: check the higher, more specific tiers
+  // before falling back to the broad "Standard" default.
+  for (const tierId of ['supercar', 'luxury']) {
+    const type = pricingConfig.vehicleTypes.find((t) => t.id === tierId)
+    if (type?.classification.makes.includes(makeLower)) return type.id
   }
 
-  return null
+  return 'standard'
 }

@@ -22,7 +22,21 @@ function emptyClientDraft(): ClientDraft {
 }
 
 function emptyVehicleInfo(): VehicleInfo {
-  return { year: '', make: '', model: '', color: '', mileage: '', vin: '', licensePlate: '' }
+  return {
+    year: '',
+    make: '',
+    model: '',
+    color: '',
+    mileage: '',
+    vin: '',
+    licensePlate: '',
+    ppf: 'unknown',
+    ceramicCoating: 'unknown',
+    mattePaint: false,
+    vinylWrap: false,
+    convertibleTop: false,
+    carbonFiberExterior: false,
+  }
 }
 
 export function useEstimateForm() {
@@ -34,14 +48,17 @@ export function useEstimateForm() {
   const [estimateNumber, setEstimateNumber] = useState(() => previewNextEstimateNumber())
   const [createdAt, setCreatedAt] = useState(() => new Date().toISOString())
 
-  const classification = useMemo(() => classifyVehicle(vehicle.make, vehicle.model), [vehicle.make, vehicle.model])
+  const classification = useMemo(
+    () => classifyVehicle(vehicle.make, vehicle.model, vehicle.year),
+    [vehicle.make, vehicle.model, vehicle.year],
+  )
   const recommendations = useMemo(() => computeRecommendations(inspection), [inspection])
 
   const lastAutoVehicleType = useRef<string | null>(selections.vehicleTypeId)
   const lastAutoCondition = useRef<string | null>(selections.conditionId)
 
-  // Auto-classify vehicle type from Make/Model, unless the user has since
-  // overridden the Vehicle Type select away from our last suggestion.
+  // Auto-classify vehicle type from Make/Model/Year, unless the user has
+  // since overridden the Vehicle Type select away from our last suggestion.
   //
   // The ref check/mutation happens here in the effect body, NOT inside the
   // setSelections updater — React 18 StrictMode double-invokes functional
@@ -50,11 +67,10 @@ export function useEstimateForm() {
   // and disagree, silently dropping the update. Keeping the updater a pure
   // "just set this value" and doing the decision here avoids that entirely.
   useEffect(() => {
-    if (!classification || classification.vehicleTypeId === 'unsupported') return
     if (selections.vehicleTypeId !== lastAutoVehicleType.current) return
-    if (selections.vehicleTypeId === classification.vehicleTypeId) return
-    lastAutoVehicleType.current = classification.vehicleTypeId
-    setSelections((prev) => ({ ...prev, vehicleTypeId: classification.vehicleTypeId }))
+    if (selections.vehicleTypeId === classification) return
+    lastAutoVehicleType.current = classification
+    setSelections((prev) => ({ ...prev, vehicleTypeId: classification }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classification, selections.vehicleTypeId])
 

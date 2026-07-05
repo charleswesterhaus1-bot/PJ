@@ -31,14 +31,18 @@ export interface VehicleClassificationRule {
   modelKeywords: string[]
 }
 
-/** A primary detailing service/package — the base line of an estimate. */
+export type VehicleSizeId = 'small' | 'medium' | 'large'
+
+/** A primary detailing service/package — the base line of an estimate.
+ * Priced explicitly per vehicle size rather than a single base × multiplier,
+ * since real-world size pricing isn't a clean ratio across every package. */
 export interface ServiceOption {
   id: string
   label: string
   description?: string
-  basePrice: number
+  basePriceBySize: Record<VehicleSizeId, number>
   baseLaborHours: number
-  /** Estimated product/consumable cost at the "medium" vehicle size — internal only. */
+  /** Estimated product/consumable cost at "medium" vehicle size — internal only. */
   chemicalCost: number
   /** Equipment/products actually used, from our current inventory. */
   equipmentUsed: string[]
@@ -83,6 +87,11 @@ export interface LaborConfig {
   teamSizeThresholds: TeamSizeThreshold[]
   /** Round the estimated appointment length to the nearest fraction of an hour. */
   appointmentRoundingHours: number
+  /** Internal fuel/vehicle-wear cost per mile driven — separate from the
+   * client-facing travel fee, which only bills miles beyond the free radius. */
+  travelCostPerMile: number
+  /** Below this gross margin, the staff-only panel shows a warning. */
+  marginWarningThreshold: number
 }
 
 /** A single piece of equipment/product in our current inventory — purely
@@ -123,6 +132,9 @@ export interface PricingConfig {
     tagline: string
   }
   equipment: EquipmentItem[]
+  /** A vehicle at or beyond this age (in years) classifies as Classic/Collector
+   * unless its make/model already matches a higher-priority tier. */
+  classicVehicleAgeYears: number
   vehicleTypes: (RateOption & { classification: VehicleClassificationRule })[]
   vehicleSizes: RateOption[]
   conditions: RateOption[]
@@ -199,6 +211,9 @@ export interface ClientRecord {
  * been saved (and assigned an id) to the client database. */
 export type ClientDraft = Omit<ClientRecord, 'id' | 'createdAt' | 'updatedAt'> & { id: string | null }
 
+export type TriState = 'unknown' | 'yes' | 'no'
+export type PpfCoverage = 'none' | 'partial' | 'full' | 'unknown'
+
 export interface VehicleInfo {
   year: string
   make: string
@@ -207,6 +222,14 @@ export interface VehicleInfo {
   mileage: string
   vin: string
   licensePlate: string
+  /** Special surfaces/finishes that change handling but not (yet) price —
+   * see utils/vehicleHandlingNotes.ts for the cautions these generate. */
+  ppf: PpfCoverage
+  ceramicCoating: TriState
+  mattePaint: boolean
+  vinylWrap: boolean
+  convertibleTop: boolean
+  carbonFiberExterior: boolean
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -265,8 +288,11 @@ export interface EstimateResult {
   appointmentLengthHours: number
   laborCost: number
   chemicalCost: number
+  travelCost: number
   grossProfit: number
   marginPercent: number
+  revenuePerLaborHour: number
+  belowMarginWarning: boolean
 }
 
 /** A fully saved estimate, persisted to localStorage. */
