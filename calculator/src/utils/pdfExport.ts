@@ -179,16 +179,12 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
   priceRow(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`, formatSignedCurrency(result.vehicleComplexity.amount), { muted: true })
   if (result.vehicleComplexity.factors?.length) wrappedNote(result.vehicleComplexity.factors.join(' · '))
 
-  if (result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) {
-    priceRow(`Size & Access — ${result.sizeAccess.label}`, formatSignedCurrency(result.sizeAccess.amount), { muted: true })
-    if (result.sizeAccess.factors?.length) wrappedNote(result.sizeAccess.factors.join(' · '))
-  }
-
   priceRow(`Condition & Findings — ${result.conditionFindings.label}`, formatSignedCurrency(result.conditionFindings.amount), { muted: true })
   if (result.conditionFindings.factors?.length) wrappedNote(result.conditionFindings.factors.join(' · '))
 
   if (result.addOnLineItems.length > 0) {
     y += 4
+    sectionLabel('Premium Upgrades')
     for (const item of result.addOnLineItems) {
       priceRow(item.label, formatCurrency(item.amount), { muted: true })
       if (item.reason) wrappedNote(item.reason)

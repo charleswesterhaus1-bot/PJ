@@ -28,8 +28,7 @@ export function buildEstimateText(
   if (client.name) lines.push(`Client: ${client.name}`)
   if (vehicleLine) lines.push(`Vehicle: ${vehicleLine}${vehicle.color ? ` (${vehicle.color})` : ''}`)
   if (vehicle.licensePlate) lines.push(`Plate: ${vehicle.licensePlate}`)
-  lines.push(`Classification: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
-  lines.push(`Size: ${findLabel(selections.vehicleSizeId, pricingConfig.vehicleSizes)}`)
+  lines.push(`Vehicle Class: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
   lines.push(`Condition: ${findLabel(selections.conditionId, pricingConfig.conditions)}`)
   const handlingNotes = buildVehicleHandlingNotes(vehicle)
   if (handlingNotes.length > 0) {
@@ -42,14 +41,10 @@ export function buildEstimateText(
   lines.push(`Base Service (${result.baseService.label}): ${formatCurrency(result.baseService.amount)}`)
   lines.push(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
   if (result.vehicleComplexity.factors?.length) lines.push(`  ${result.vehicleComplexity.factors.join(' · ')}`)
-  if (result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) {
-    lines.push(`Size & Access — ${result.sizeAccess.label}: ${formatSignedCurrency(result.sizeAccess.amount)}`)
-    if (result.sizeAccess.factors?.length) lines.push(`  ${result.sizeAccess.factors.join(' · ')}`)
-  }
   lines.push(`Condition & Findings — ${result.conditionFindings.label}: ${formatSignedCurrency(result.conditionFindings.amount)}`)
   if (result.conditionFindings.factors?.length) lines.push(`  ${result.conditionFindings.factors.join(' · ')}`)
   if (result.addOnLineItems.length) {
-    lines.push('Add-ons:')
+    lines.push('Premium Upgrades:')
     result.addOnLineItems.forEach((item) => {
       lines.push(`  • ${item.label}: ${formatCurrency(item.amount)}`)
       if (item.reason) lines.push(`    ${item.reason}`)

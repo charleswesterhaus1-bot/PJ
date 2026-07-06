@@ -131,14 +131,11 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
           <ExplainedRow label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} amount={result.vehicleComplexity.amount} factors={result.vehicleComplexity.factors} />
 
-          {(result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) && (
-            <ExplainedRow label={`Size & Access — ${result.sizeAccess.label}`} amount={result.sizeAccess.amount} factors={result.sizeAccess.factors} />
-          )}
-
           <ExplainedRow label={`Condition & Findings — ${result.conditionFindings.label}`} amount={result.conditionFindings.amount} factors={result.conditionFindings.factors} />
 
           {result.addOnLineItems.length > 0 && (
             <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Premium Upgrades</p>
               {result.addOnLineItems.map((item) => (
                 <div key={item.label} className="py-1">
                   <StatRow label={item.label} value={formatCurrency(item.amount)} muted />

@@ -22,8 +22,8 @@ interface SeverityPickerProps {
 
 export function SeverityPicker({ label, value, onChange }: SeverityPickerProps) {
   return (
-    <div className="flex items-center justify-between gap-3 py-2">
-      <span className={`text-sm ${value >= 1 ? 'text-slate-100' : 'text-slate-400'}`}>{label}</span>
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 py-2">
+      <span className={`min-w-0 flex-1 text-sm ${value >= 1 ? 'text-slate-100' : 'text-slate-400'}`}>{label}</span>
       <div className="flex shrink-0 gap-1 rounded-full border border-white/10 bg-black/20 p-1">
         {LEVELS.map((level) => (
           <button

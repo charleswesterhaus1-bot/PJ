@@ -48,17 +48,14 @@ export function useEstimateForm() {
   const [estimateNumber, setEstimateNumber] = useState(() => previewNextEstimateNumber())
   const [createdAt, setCreatedAt] = useState(() => new Date().toISOString())
 
-  const classification = useMemo(
-    () => classifyVehicle(vehicle.make, vehicle.model, vehicle.year),
-    [vehicle.make, vehicle.model, vehicle.year],
-  )
+  const classification = useMemo(() => classifyVehicle(vehicle.make, vehicle.model), [vehicle.make, vehicle.model])
   const recommendations = useMemo(() => computeRecommendations(inspection), [inspection])
 
   const lastAutoVehicleType = useRef<string | null>(selections.vehicleTypeId)
   const lastAutoCondition = useRef<string | null>(selections.conditionId)
 
-  // Auto-classify vehicle type from Make/Model/Year, unless the user has
-  // since overridden the Vehicle Type select away from our last suggestion.
+  // Auto-classify vehicle class from Make/Model, unless the user has since
+  // overridden the Vehicle Class select away from our last suggestion.
   //
   // The ref check/mutation happens here in the effect body, NOT inside the
   // setSelections updater — React 18 StrictMode double-invokes functional
@@ -105,8 +102,6 @@ export function useEstimateForm() {
   }
 
   function updateSelection<K extends keyof EstimateSelections>(key: K, value: EstimateSelections[K]) {
-    if (key === 'vehicleTypeId') lastAutoVehicleType.current = value as string
-    if (key === 'conditionId') lastAutoCondition.current = value as string
     setSelections((prev) => ({ ...prev, [key]: value }))
   }
 

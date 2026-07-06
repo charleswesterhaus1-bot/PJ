@@ -72,18 +72,12 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
         <Row label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} value={formatSignedCurrency(result.vehicleComplexity.amount)} muted />
         {result.vehicleComplexity.factors && result.vehicleComplexity.factors.length > 0 && <Note text={result.vehicleComplexity.factors.join(' · ')} />}
 
-        {(result.sizeAccess.amount !== 0 || (result.sizeAccess.factors?.length ?? 0) > 0) && (
-          <>
-            <Row label={`Size & Access — ${result.sizeAccess.label}`} value={formatSignedCurrency(result.sizeAccess.amount)} muted />
-            {result.sizeAccess.factors && result.sizeAccess.factors.length > 0 && <Note text={result.sizeAccess.factors.join(' · ')} />}
-          </>
-        )}
-
         <Row label={`Condition & Findings — ${result.conditionFindings.label}`} value={formatSignedCurrency(result.conditionFindings.amount)} muted />
         {result.conditionFindings.factors && result.conditionFindings.factors.length > 0 && <Note text={result.conditionFindings.factors.join(' · ')} />}
 
         {result.addOnLineItems.length > 0 && (
           <div className="mt-2 border-t border-gray-100 pt-2">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Premium Upgrades</p>
             {result.addOnLineItems.map((item) => (
               <div key={item.label}>
                 <Row label={item.label} value={formatCurrency(item.amount)} muted />

@@ -31,28 +31,30 @@ export interface VehicleClassificationRule {
   modelKeywords: string[]
 }
 
-export type VehicleSizeId = 'small' | 'medium' | 'large'
+export type VehicleClassId = 'sports-car' | 'supercar' | 'luxury-suv' | 'performance-truck'
 
 /** A primary detailing service/package — the base line of an estimate.
- * Priced explicitly per vehicle size rather than a single base × multiplier,
- * since real-world size pricing isn't a clean ratio across every package. */
+ * Priced explicitly per vehicle class rather than a single base × multiplier,
+ * since real-world class pricing isn't a clean ratio across every package. */
 export interface ServiceOption {
   id: string
   label: string
-  description?: string
-  basePriceBySize: Record<VehicleSizeId, number>
+  /** What's included, shown as a bullet list — kept literal/plain so it reads
+   * as a clear checklist rather than marketing copy. */
+  includes: string[]
+  basePriceByClass: Record<VehicleClassId, number>
   baseLaborHours: number
-  /** Estimated product/consumable cost at "medium" vehicle size — internal only. */
+  /** Estimated product/consumable cost at the "Sports Car" baseline class — internal only. */
   chemicalCost: number
   /** Equipment/products actually used, from our current inventory. */
   equipmentUsed: string[]
 }
 
-/** An optional add-on with its own flat price and labor contribution. */
+/** An optional upgrade with its own flat price and labor contribution. */
 export interface AddOnOption {
   id: string
   label: string
-  description?: string
+  includes: string[]
   price: number
   laborHours: number
   chemicalCost: number
@@ -132,11 +134,11 @@ export interface PricingConfig {
     tagline: string
   }
   equipment: EquipmentItem[]
-  /** A vehicle at or beyond this age (in years) classifies as Classic/Collector
-   * unless its make/model already matches a higher-priority tier. */
-  classicVehicleAgeYears: number
+  /** Vehicle Class doubles as both the classification shown to staff and the
+   * pricing dimension services are keyed on (`ServiceOption.basePriceByClass`).
+   * `multiplier` here scales labor hours and chemical cost only — price comes
+   * directly from each service's per-class table. */
   vehicleTypes: (RateOption & { classification: VehicleClassificationRule })[]
-  vehicleSizes: RateOption[]
   conditions: RateOption[]
   services: ServiceOption[]
   addOns: AddOnOption[]
@@ -253,7 +255,6 @@ export interface EstimatePhoto {
 export interface EstimateSelections {
   serviceId: string
   vehicleTypeId: string
-  vehicleSizeId: string
   conditionId: string
   addOnIds: string[]
   travelMiles: number
@@ -270,7 +271,6 @@ export interface EstimateLineItem {
 export interface EstimateResult {
   baseService: EstimateLineItem
   vehicleComplexity: EstimateLineItem
-  sizeAccess: EstimateLineItem
   conditionFindings: EstimateLineItem
   addOnLineItems: (EstimateLineItem & { reason?: string })[]
   addOnsTotal: number

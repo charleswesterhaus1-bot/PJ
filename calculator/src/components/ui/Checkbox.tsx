@@ -1,6 +1,7 @@
-// Custom checkbox styled as a gold-accented luxury toggle chip, used in the
-// add-ons grid. Shows the price alongside the label, and — when the
-// inspection recommended this add-on — a small badge plus the reason why.
+// Custom checkbox styled as a gold-accented luxury toggle chip, used for the
+// Premium Upgrades. Shows the price and a short "what's included" caption
+// always, plus — when the inspection recommended this upgrade — a badge and
+// the reason why.
 
 import { Check, Wand2 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -11,11 +12,12 @@ interface CheckboxProps {
   checked: boolean
   onChange: (checked: boolean) => void
   formattedPrice: string
+  includes?: string[]
   recommended?: boolean
   reason?: string
 }
 
-export function Checkbox({ label, checked, onChange, formattedPrice, recommended, reason }: CheckboxProps) {
+export function Checkbox({ label, checked, onChange, formattedPrice, includes, recommended, reason }: CheckboxProps) {
   return (
     <motion.button
       whileHover={{ scale: 1.008 }}
@@ -46,7 +48,10 @@ export function Checkbox({ label, checked, onChange, formattedPrice, recommended
             <span className={`text-sm font-medium ${checked ? 'text-slate-50' : 'text-slate-300'}`}>{label}</span>
             {recommended && <Wand2 className="h-3 w-3 shrink-0 text-[#E8CF83]" />}
           </span>
-          {recommended && reason && <span className="mt-0.5 block max-w-[26rem] text-xs text-slate-500">{reason}</span>}
+          {includes && includes.length > 0 && (
+            <span className="mt-0.5 block max-w-[26rem] text-xs text-slate-500">{includes.join(' · ')}</span>
+          )}
+          {recommended && reason && <span className="mt-0.5 block max-w-[26rem] text-xs italic text-[#E8CF83]/70">{reason}</span>}
         </span>
       </span>
       <span className={`shrink-0 text-xs font-semibold tabular-nums ${checked ? 'text-[#E8CF83]' : 'text-slate-500'}`}>

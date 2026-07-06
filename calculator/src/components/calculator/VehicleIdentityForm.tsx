@@ -1,5 +1,5 @@
-// Step 2 — vehicle identity. Make/Model/Year drive automatic classification
-// into Standard / Luxury / Performance / Supercar / Classic; the result is
+// Step 2 — vehicle identity. Make/Model drive automatic classification into
+// Sports Car / Supercar / Luxury SUV / Performance Truck; the result is
 // shown as a badge with a manual override always available underneath.
 // Also captures special surfaces/finishes (PPF, ceramic coating, matte
 // paint, wraps, soft top, carbon fiber) that change handling, not price.
@@ -62,7 +62,7 @@ export function VehicleIdentityForm({ vehicle, onChange, classification, vehicle
 
       <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.02] p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Classification</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-slate-500">Vehicle Class</span>
           {isAutoDetected && <Badge tone="gold">Auto-detected</Badge>}
         </div>
         <div className="mt-2 max-w-xs">

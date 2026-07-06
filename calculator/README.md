@@ -27,20 +27,23 @@ use day-to-day.
 2. **Vehicle Information** — Year/Make/Model/Color/Mileage/VIN/Plate, plus
    PPF/ceramic coating/matte paint/vinyl wrap/convertible top/carbon fiber
    flags (these don't change price, but drive "Vehicle Handling Notes" shown
-   on the estimate). Make + Model + Year auto-classify the vehicle into
-   Standard / Luxury / Performance / Supercar / Classic-Collector
+   on the estimate). Make + Model auto-classify the vehicle into a
+   **Vehicle Class** — Sports Car / Supercar / Luxury SUV / Performance Truck
    (`src/utils/classifyVehicle.ts`) — every vehicle gets priced, there's no
-   "unsupported" case. Classification is always a dropdown-click away from
-   override.
+   "unsupported" case. Vehicle Class doubles as the pricing dimension every
+   service is keyed on and is always a dropdown-click away from override.
 3. **Vehicle Inspection** — rate paint/wheel/interior/engine-bay findings
    None → Light → Moderate → Heavy. This is the input to
    `src/utils/recommendationEngine.ts`, which suggests a primary service, an
    overall condition tier, and specific add-ons (each with a plain-language
    reason), and flags anything outside detailing's scope (e.g. existing
    wheel damage) as a caution rather than a bogus recommendation.
-4. **Service & Condition**, **Add-Ons** — the suggestions from Step 3 show up
-   as a "Recommended" banner and a dedicated "Recommended Add-Ons" section
-   here; accepting one is still an explicit click since it changes the price.
+4. **Service & Condition**, **Premium Upgrades** — the suggestions from Step 3
+   show up as a "Recommended" banner and a dedicated "Recommended Upgrades"
+   section here; accepting one is still an explicit click since it changes
+   the price. Only two upgrades exist (Engine Bay Detail, Leather
+   Conditioning) — paint decontamination is bundled into Paint Enhancement
+   Detail rather than sold separately.
 5. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
    shots, compressed client-side and attached to the saved estimate).
 
@@ -56,8 +59,8 @@ just visually.
 
 ## Editing prices
 
-Every number in the app — service prices, vehicle type/size/condition
-multipliers, add-on pricing, travel rates, discount percentages, labor rate,
+Every number in the app — service prices, vehicle class/condition
+multipliers, upgrade pricing, travel rates, discount percentages, labor rate,
 chemical/travel costs, the margin-warning threshold, and team-size
 thresholds — lives in one file:
 
@@ -65,15 +68,19 @@ thresholds — lives in one file:
 src/config/pricingConfig.ts
 ```
 
-Services are priced per vehicle size explicitly (`basePriceBySize: { small,
-medium, large }`) rather than one number × a multiplier, since real size
-pricing isn't a clean ratio across every package — edit whichever size's
-number needs to change without touching the others. Edit any value and
-every screen updates automatically; no pricing is hardcoded anywhere else
-in the app. The inspection checklist itself (`src/config/inspectionConfig.ts`)
-and the vehicle classification rules (inside each `vehicleTypes` entry in
-`pricingConfig.ts`) are similarly data-driven — add a checklist item or a
-new recognized nameplate/keyword without touching any component code.
+Services are priced per vehicle class explicitly (`basePriceByClass: {
+'sports-car', supercar, 'luxury-suv', 'performance-truck' }`) rather than one
+number × a multiplier, since real class pricing isn't a clean ratio across
+every package — edit whichever class's number needs to change without
+touching the others. The cheapest class (Sports Car) is the pricing baseline;
+the "Exotic Vehicle Handling & Protection" line on the estimate is just the
+delta between that baseline and the selected class's price for the chosen
+service. Edit any value and every screen updates automatically; no pricing is
+hardcoded anywhere else in the app. The inspection checklist itself
+(`src/config/inspectionConfig.ts`) and the vehicle classification rules
+(inside each `vehicleTypes` entry in `pricingConfig.ts`) are similarly
+data-driven — add a checklist item or a new recognized nameplate/keyword
+without touching any component code.
 
 A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 45% by default): each service's `baseLaborHours` was calibrated so the

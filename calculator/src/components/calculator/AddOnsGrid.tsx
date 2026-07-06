@@ -1,7 +1,8 @@
-// Grid of add-on toggle chips, split into a "Recommended Add-Ons" section
-// (driven by the inspection, each with a plain-language reason) and an
-// "Optional Add-Ons" section for everything else. Accepting a recommended
-// add-on is still a deliberate click, since it directly changes the price.
+// Premium Upgrades grid — currently just Engine Bay Detail and Leather
+// Conditioning, split into a "Recommended" section (driven by the
+// inspection, each with a plain-language reason) and everything else.
+// Accepting a recommended upgrade is still a deliberate click, since it
+// directly changes the price.
 
 import { Sparkles, TriangleAlert } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -24,7 +25,7 @@ export function AddOnsGrid({ selectedIds, onToggle, recommendations }: AddOnsGri
 
   return (
     <GlassPanel className="p-6" delay={0.14}>
-      <SectionHeading eyebrow="Step Five" title="Add-Ons" icon={<Sparkles className="h-5 w-5" />} />
+      <SectionHeading eyebrow="Step Five" title="Premium Upgrades" icon={<Sparkles className="h-5 w-5" />} />
 
       {recommendations.cautions.length > 0 && (
         <div className="mb-4 space-y-1.5">
@@ -39,13 +40,13 @@ export function AddOnsGrid({ selectedIds, onToggle, recommendations }: AddOnsGri
 
       {recommended.length > 0 && (
         <div className="mb-5">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C9A227]/80">Recommended Add-Ons</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#C9A227]/80">Recommended Upgrades</p>
           <AddOnList addOns={recommended} selectedIds={selectedIds} onToggle={onToggle} recommendations={recommendations} />
         </div>
       )}
 
       <div>
-        {recommended.length > 0 && <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Optional Add-Ons</p>}
+        {recommended.length > 0 && <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Additional Upgrades</p>}
         <AddOnList addOns={optional} selectedIds={selectedIds} onToggle={onToggle} recommendations={recommendations} />
       </div>
     </GlassPanel>
@@ -77,6 +78,7 @@ function AddOnList({
             label={addOn.label}
             price={addOn.price}
             formattedPrice={formatCurrency(addOn.price)}
+            includes={addOn.includes}
             checked={selectedIds.includes(addOn.id)}
             onChange={() => onToggle(addOn.id)}
             recommended={recommendations.suggestedAddOnIds.includes(addOn.id)}
