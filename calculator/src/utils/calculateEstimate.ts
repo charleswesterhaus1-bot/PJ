@@ -1,8 +1,7 @@
 // Pure calculation engine — takes the current form selections plus the
 // pricing config and derives every line item shown in the estimate, both
-// client-facing (pricing, "why" explanations) and internal-only
-// (labor/chemical/travel cost, gross profit, margin). No React, no side
-// effects.
+// client-facing (pricing) and internal-only (labor/material/travel cost,
+// gross profit, margin). No React, no side effects.
 
 import { pricingConfig } from '../config/pricingConfig'
 import type { EstimateResult, EstimateSelections, VehicleClassId } from '../types'
@@ -11,29 +10,14 @@ function findById<T extends { id: string }>(items: T[], id: string): T | undefin
   return items.find((item) => item.id === id)
 }
 
-function roundToStep(value: number, step: number): number {
-  if (step <= 0) return value
-  return Math.round(value / step) * step
-}
-
 const BASELINE_CLASS: VehicleClassId = 'sports-car'
 
-/**
- * @param inspectionFindings Plain-language findings (e.g. "Water Spots — Moderate")
- *   from the inspection, folded into the condition line's justification.
- * @param addOnReasons Recommendation-engine reasons keyed by add-on id, shown
- *   as a "why" caption under any add-on that was suggested by the inspection.
- */
-export function calculateEstimate(
-  selections: EstimateSelections,
-  inspectionFindings: string[] = [],
-  addOnReasons: Record<string, string> = {},
-): EstimateResult {
-  const { vehicleTypes, conditions, services, addOns, travel, discounts, labor } = pricingConfig
+export function calculateEstimate(selections: EstimateSelections): EstimateResult {
+  const { vehicleTypes, exteriorConditions, services, addOns, travel, discounts, labor } = pricingConfig
 
   const service = findById(services, selections.serviceId) ?? services[0]
   const vehicleClass = findById(vehicleTypes, selections.vehicleTypeId) ?? vehicleTypes[0]
-  const condition = findById(conditions, selections.conditionId) ?? conditions[0]
+  const exteriorCondition = findById(exteriorConditions, selections.exteriorConditionId) ?? exteriorConditions[0]
 
   // Pricing is looked up per vehicle class directly (not a flat base ×
   // multiplier — real class pricing isn't a clean ratio across every
@@ -43,30 +27,27 @@ export function calculateEstimate(
   const classId = vehicleClass.id as VehicleClassId
   const basePrice = service.basePriceByClass[BASELINE_CLASS]
   const afterClass = service.basePriceByClass[classId] ?? basePrice
-  const afterCondition = afterClass * condition.multiplier
-
   const vehicleComplexityAmount = afterClass - basePrice
-  const conditionFindingsAmount = afterCondition - afterClass
 
-  const adjustedBase = afterCondition
+  // Exterior Condition is a flat surcharge — the same dollar amount
+  // regardless of vehicle class or selected service.
+  const exteriorSurcharge = exteriorCondition.surcharge
 
-  // Add-ons
+  // Add-ons — only ones actually valid for the selected service are ever
+  // passed in via selections.addOnIds (the UI hides/prunes the rest), but
+  // filter again here so a stale selection can never silently price in.
   const selectedAddOns = selections.addOnIds
     .map((id) => findById(addOns, id))
-    .filter((a): a is NonNullable<typeof a> => Boolean(a))
+    .filter((a): a is NonNullable<typeof a> => Boolean(a) && Boolean(a?.availableForServiceIds.includes(selections.serviceId)))
 
-  const addOnLineItems = selectedAddOns.map((addOn) => ({
-    label: addOn.label,
-    amount: addOn.price,
-    reason: addOnReasons[addOn.id],
-  }))
+  const addOnLineItems = selectedAddOns.map((addOn) => ({ label: addOn.label, amount: addOn.price }))
   const addOnsTotal = selectedAddOns.reduce((sum, addOn) => sum + addOn.price, 0)
 
   // Travel
   const billableMiles = Math.max(0, selections.travelMiles - travel.freeMiles)
   const travelFee = billableMiles * travel.pricePerMile
 
-  const subtotal = adjustedBase + addOnsTotal + travelFee
+  const subtotal = afterClass + exteriorSurcharge + addOnsTotal + travelFee
 
   // Discount
   let discountPercentage = 0
@@ -86,49 +67,29 @@ export function calculateEstimate(
   const discountAmount = subtotal * discountPercentage
   const total = subtotal - discountAmount
 
-  // Labor hours: base service hours scaled by vehicle class + condition,
-  // plus each selected add-on's own labor contribution.
-  const baseLaborScaled = service.baseLaborHours * vehicleClass.multiplier * condition.multiplier
+  // Labor hours: base service hours scaled by vehicle class, plus each
+  // selected add-on's own flat labor contribution.
+  const baseLaborScaled = service.baseLaborHours * vehicleClass.multiplier
   const addOnLaborHours = selectedAddOns.reduce((sum, addOn) => sum + addOn.laborHours, 0)
   const laborHours = baseLaborScaled + addOnLaborHours
 
-  const threshold =
-    labor.teamSizeThresholds.find((t) => laborHours <= t.maxLaborHours) ??
-    labor.teamSizeThresholds[labor.teamSizeThresholds.length - 1]
-  const teamSize = threshold.teamSize
-  const teamSizeLabel = threshold.label
-
-  const rawAppointmentLength = laborHours / teamSize
-  const appointmentLengthHours = Math.max(
-    labor.appointmentRoundingHours,
-    roundToStep(rawAppointmentLength, labor.appointmentRoundingHours),
-  )
-
   // Internal profitability — never shown on a client-facing estimate.
   const laborCost = laborHours * labor.ratePerHour
-  const scaledServiceChemicalCost = service.chemicalCost * vehicleClass.multiplier * condition.multiplier
-  const addOnChemicalCost = selectedAddOns.reduce((sum, addOn) => sum + addOn.chemicalCost, 0)
-  const chemicalCost = scaledServiceChemicalCost + addOnChemicalCost
+  const scaledServiceMaterialCost = service.materialCost * vehicleClass.multiplier
+  const addOnMaterialCost = selectedAddOns.reduce((sum, addOn) => sum + addOn.materialCost, 0)
+  const materialCost = scaledServiceMaterialCost + addOnMaterialCost
   // Fuel/vehicle-wear cost accrues for the whole trip, not just the miles
   // billed to the client beyond the free radius.
   const travelCost = selections.travelMiles * labor.travelCostPerMile
-  const grossProfit = total - laborCost - chemicalCost - travelCost
+  const grossProfit = total - laborCost - materialCost - travelCost
   const marginPercent = total > 0 ? grossProfit / total : 0
   const revenuePerLaborHour = laborHours > 0 ? total / laborHours : 0
   const belowMarginWarning = marginPercent < labor.marginWarningThreshold
 
   return {
     baseService: { label: service.label, amount: basePrice },
-    vehicleComplexity: {
-      label: vehicleClass.label,
-      amount: vehicleComplexityAmount,
-      factors: vehicleClass.factors,
-    },
-    conditionFindings: {
-      label: condition.label,
-      amount: conditionFindingsAmount,
-      factors: [...(condition.factors ?? []), ...inspectionFindings],
-    },
+    vehicleComplexity: { label: vehicleClass.label, amount: vehicleComplexityAmount, factors: vehicleClass.factors },
+    exteriorCondition: { label: exteriorCondition.label, amount: exteriorSurcharge, factors: [exteriorCondition.note] },
     addOnLineItems,
     addOnsTotal,
     travelFee,
@@ -138,11 +99,8 @@ export function calculateEstimate(
     discountAmount,
     total,
     laborHours,
-    teamSize,
-    teamSizeLabel,
-    appointmentLengthHours,
     laborCost,
-    chemicalCost,
+    materialCost,
     travelCost,
     grossProfit,
     marginPercent,
@@ -155,7 +113,9 @@ export function defaultSelections(): EstimateSelections {
   return {
     serviceId: pricingConfig.services[0].id,
     vehicleTypeId: pricingConfig.vehicleTypes[0].id,
-    conditionId: pricingConfig.conditions[0].id,
+    exteriorConditionId: 'excellent',
+    interiorConditionId: 'excellent',
+    paintConditionId: 'excellent',
     addOnIds: [],
     travelMiles: 0,
     discountId: 'none',

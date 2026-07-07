@@ -1,9 +1,8 @@
-// Staff-only view of job economics — labor/crew planning plus cost and
-// margin. This component is never placed inside the print/PDF-captured
-// node; it physically lives outside it, not just visually hidden, so it
-// can never leak onto a client-facing estimate.
+// Staff-only view of job economics. This component is never placed inside
+// the print/PDF-captured node; it physically lives outside it, not just
+// visually hidden, so it can never leak onto a client-facing estimate.
 
-import { Lock, Wrench, Users, Clock3, DollarSign, TrendingUp, TriangleAlert, Gauge, Car } from 'lucide-react'
+import { Lock, Wrench, DollarSign, TrendingUp, TriangleAlert, Gauge, Car } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
 import { formatCurrency, formatHours } from '../../utils/format'
 import { pricingConfig } from '../../config/pricingConfig'
@@ -20,19 +19,21 @@ export function ProfitabilityPanel({ result }: { result: EstimateResult }) {
     <GlassPanel className="p-5" delay={0.15}>
       <div className="mb-4 flex items-center gap-2 text-slate-400">
         <Lock className="h-3.5 w-3.5" />
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em]">Staff Only — Never Printed</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em]">Business Summary — Never Printed</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 border-b border-white/5 pb-4 text-center">
-        <Stat icon={<Wrench className="h-4 w-4" />} value={formatHours(result.laborHours)} label="Labor" />
-        <Stat icon={<Users className="h-4 w-4" />} value={result.teamSizeLabel} label="Team" />
-        <Stat icon={<Clock3 className="h-4 w-4" />} value={formatHours(result.appointmentLengthHours)} label="Appointment" />
+      <div className="flex items-center justify-between border-b border-white/5 pb-3 text-sm text-slate-300">
+        <span className="flex items-center gap-1.5">
+          <Wrench className="h-3.5 w-3.5 text-[#C9A227]" />
+          Estimated Labor Hours
+        </span>
+        <span className="font-semibold tabular-nums text-slate-100">{formatHours(result.laborHours)}</span>
       </div>
 
       <div className="space-y-1.5 pt-4">
         <Row label="Labor Cost" value={formatCurrency(result.laborCost)} />
-        <Row label="Chemical Cost" value={formatCurrency(result.chemicalCost)} />
-        <Row label="Travel/Fuel Cost" value={formatCurrency(result.travelCost)} />
+        <Row label="Material Cost" value={formatCurrency(result.materialCost)} />
+        <Row label="Travel Cost" value={formatCurrency(result.travelCost)} />
         <Row label="Gross Profit" value={formatCurrency(result.grossProfit)} emphasis />
         <div className="flex items-center justify-between pt-1.5">
           <span className="flex items-center gap-1.5 text-sm text-slate-300">
@@ -64,19 +65,9 @@ export function ProfitabilityPanel({ result }: { result: EstimateResult }) {
 
       <p className="mt-4 flex items-start gap-1.5 text-[10px] text-slate-600">
         <Car className="mt-0.5 h-3 w-3 shrink-0" />
-        Travel/fuel cost is an internal estimate and is separate from the client-facing travel fee.
+        Travel cost is an internal estimate and is separate from the client-facing travel fee.
       </p>
     </GlassPanel>
-  )
-}
-
-function Stat({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) {
-  return (
-    <div>
-      <div className="mx-auto mb-1 flex justify-center text-[#C9A227]">{icon}</div>
-      <p className="text-sm font-semibold text-slate-100">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-    </div>
   )
 }
 

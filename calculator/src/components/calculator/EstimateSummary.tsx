@@ -2,9 +2,9 @@
 // for physical printing, a separate light/ink-friendly version is portaled
 // into #print-root (see PrintableEstimate.tsx) — a sibling of #root, not a
 // descendant — so print output can never be affected by this component's
-// own layout/animation, and internal-only figures (labor cost, margin,
-// team size) can never end up on a client's copy since they're simply
-// never passed to either version.
+// own layout/animation, and internal-only figures (labor cost, margin)
+// can never end up on a client's copy since they're simply never passed to
+// either version.
 
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -18,7 +18,7 @@ import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } fro
 import { formatCurrency, formatDate, formatSignedCurrency } from '../../utils/format'
 import { buildEstimateText } from '../../utils/estimateText'
 import { copyToClipboard } from '../../utils/clipboard'
-import { buildVehicleHandlingNotes } from '../../utils/vehicleHandlingNotes'
+import { buildTechnicianNotes } from '../../utils/vehicleHandlingNotes'
 import { useToast } from '../../hooks/useToast'
 import { pricingConfig } from '../../config/pricingConfig'
 
@@ -40,7 +40,7 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
-  const handlingNotes = buildVehicleHandlingNotes(vehicle)
+  const technicianNotes = buildTechnicianNotes(vehicle, selections)
 
   async function handleCopy() {
     const text = buildEstimateText(estimateNumber, createdAt, client, vehicle, selections, result)
@@ -93,14 +93,14 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
           )}
         </div>
 
-        {handlingNotes.length > 0 && (
+        {technicianNotes.length > 0 && (
           <div className="border-b border-white/10 bg-amber-400/[0.04] px-6 py-3">
             <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-amber-300">
               <TriangleAlert className="h-3 w-3" />
-              Vehicle Handling Notes
+              Technician Notes
             </p>
             <ul className="space-y-1">
-              {handlingNotes.map((note) => (
+              {technicianNotes.map((note) => (
                 <li key={note} className="text-xs text-amber-200/80">
                   {note}
                 </li>
@@ -131,16 +131,13 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
           <ExplainedRow label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} amount={result.vehicleComplexity.amount} factors={result.vehicleComplexity.factors} />
 
-          <ExplainedRow label={`Condition & Findings — ${result.conditionFindings.label}`} amount={result.conditionFindings.amount} factors={result.conditionFindings.factors} />
+          <ExplainedRow label={`Exterior Condition — ${result.exteriorCondition.label}`} amount={result.exteriorCondition.amount} factors={result.exteriorCondition.factors} />
 
           {result.addOnLineItems.length > 0 && (
             <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Premium Upgrades</p>
               {result.addOnLineItems.map((item) => (
-                <div key={item.label} className="py-1">
-                  <StatRow label={item.label} value={formatCurrency(item.amount)} muted />
-                  {item.reason && <p className="mt-0.5 text-xs italic text-slate-500">{item.reason}</p>}
-                </div>
+                <StatRow key={item.label} label={item.label} value={formatCurrency(item.amount)} muted />
               ))}
             </div>
           )}
@@ -194,7 +191,7 @@ function ExplainedRow({ label, amount, factors }: { label: string; amount: numbe
   return (
     <div className="py-1.5">
       <StatRow label={label} value={formatSignedCurrency(amount)} muted />
-      {factors && factors.length > 0 && <p className="mt-0.5 text-xs text-slate-500">{factors.join(' · ')}</p>}
+      {factors && factors.length > 0 && factors.join('') !== '' && <p className="mt-0.5 text-xs text-slate-500">{factors.filter(Boolean).join(' · ')}</p>}
     </div>
   )
 }

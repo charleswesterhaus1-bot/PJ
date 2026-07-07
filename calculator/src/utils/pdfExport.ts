@@ -7,12 +7,12 @@
 // glassmorphism panel makes for a bad, ink-heavy printout anyway. Drawing
 // the PDF natively gives a crisp, brand-styled, light document at a
 // fraction of the file size — and it can never accidentally include the
-// staff-only profitability panel, since that data is never passed in.
+// staff-only Business Summary, since that data is never passed in.
 
 import jsPDF from 'jspdf'
 import { pricingConfig } from '../config/pricingConfig'
 import { formatCurrency, formatDate, formatSignedCurrency } from './format'
-import { buildVehicleHandlingNotes } from './vehicleHandlingNotes'
+import { buildTechnicianNotes } from './vehicleHandlingNotes'
 import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } from '../types'
 
 const NAVY: [number, number, number] = [11, 27, 58]
@@ -136,18 +136,18 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
     y += 8
   }
 
-  const handlingNotes = buildVehicleHandlingNotes(vehicle)
-  if (handlingNotes.length > 0) {
+  const technicianNotes = buildTechnicianNotes(vehicle, selections)
+  if (technicianNotes.length > 0) {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8.5)
     doc.setTextColor(...AMBER)
     ensureSpace(14)
-    doc.text('VEHICLE HANDLING NOTES', MARGIN, y)
+    doc.text('TECHNICIAN NOTES', MARGIN, y)
     y += 13
     doc.setFont('helvetica', 'italic')
     doc.setFontSize(8.5)
     doc.setTextColor(...AMBER)
-    for (const note of handlingNotes) {
+    for (const note of technicianNotes) {
       const lines = doc.splitTextToSize(`• ${note}`, CONTENT_WIDTH)
       ensureSpace(lines.length * 11)
       doc.text(lines, MARGIN, y)
@@ -177,17 +177,16 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
   priceRow(`Base Service — ${result.baseService.label}`, formatCurrency(result.baseService.amount))
 
   priceRow(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`, formatSignedCurrency(result.vehicleComplexity.amount), { muted: true })
-  if (result.vehicleComplexity.factors?.length) wrappedNote(result.vehicleComplexity.factors.join(' · '))
+  if (result.vehicleComplexity.factors?.filter(Boolean).length) wrappedNote(result.vehicleComplexity.factors.filter(Boolean).join(' · '))
 
-  priceRow(`Condition & Findings — ${result.conditionFindings.label}`, formatSignedCurrency(result.conditionFindings.amount), { muted: true })
-  if (result.conditionFindings.factors?.length) wrappedNote(result.conditionFindings.factors.join(' · '))
+  priceRow(`Exterior Condition — ${result.exteriorCondition.label}`, formatSignedCurrency(result.exteriorCondition.amount), { muted: true })
+  if (result.exteriorCondition.factors?.filter(Boolean).length) wrappedNote(result.exteriorCondition.factors.filter(Boolean).join(' · '))
 
   if (result.addOnLineItems.length > 0) {
     y += 4
     sectionLabel('Premium Upgrades')
     for (const item of result.addOnLineItems) {
       priceRow(item.label, formatCurrency(item.amount), { muted: true })
-      if (item.reason) wrappedNote(item.reason)
     }
   }
 

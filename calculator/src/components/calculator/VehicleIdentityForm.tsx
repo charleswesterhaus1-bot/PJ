@@ -1,5 +1,5 @@
 // Step 2 — vehicle identity. Make/Model drive automatic classification into
-// Sports Car / Supercar / Luxury SUV / Performance Truck; the result is
+// Sports Car / Supercar / Performance Truck / Hypercar; the result is
 // shown as a badge with a manual override always available underneath.
 // Also captures special surfaces/finishes (PPF, ceramic coating, matte
 // paint, wraps, soft top, carbon fiber) that change handling, not price.

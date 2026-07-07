@@ -1,5 +1,5 @@
-// The main quoting workspace: inspection-driven form on the left, the
-// client-facing estimate + staff-only profitability panel pinned on the
+// The main quoting workspace: the estimate form on the left, the
+// client-facing estimate + staff-only Business Summary pinned on the
 // right.
 
 import { useEffect, useState } from 'react'
@@ -68,7 +68,6 @@ export function CalculatorPage({ prefillClient, onConsumePrefill }: CalculatorPa
       clientId: savedClient.id,
       client: savedClient,
       vehicle: form.vehicle,
-      inspection: form.inspection,
       selections: form.selections,
       result: form.result,
       photos: form.photos,
@@ -133,9 +132,9 @@ export function CalculatorPage({ prefillClient, onConsumePrefill }: CalculatorPa
           vehicleTypeId={form.selections.vehicleTypeId}
           onVehicleTypeChange={(id) => form.updateSelection('vehicleTypeId', id)}
         />
-        <InspectionForm inspection={form.inspection} onChangeSeverity={form.setInspectionSeverity} />
-        <ServiceConditionForm selections={form.selections} onChange={form.updateSelection} recommendations={form.recommendations} />
-        <AddOnsGrid selectedIds={form.selections.addOnIds} onToggle={form.toggleAddOn} recommendations={form.recommendations} />
+        <ServiceConditionForm selections={form.selections} onChange={form.updateSelection} />
+        <InspectionForm selections={form.selections} onChange={form.updateSelection} />
+        <AddOnsGrid serviceId={form.selections.serviceId} selectedIds={form.selections.addOnIds} onToggle={form.toggleAddOn} />
         <TravelAndDiscountForm selections={form.selections} onChange={form.updateSelection} />
         <PhotoUpload photos={form.photos} onAdd={form.addPhoto} onRemove={form.removePhoto} />
       </motion.div>

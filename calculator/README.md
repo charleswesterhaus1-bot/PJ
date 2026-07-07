@@ -26,61 +26,67 @@ use day-to-day.
    save an estimate.
 2. **Vehicle Information** — Year/Make/Model/Color/Mileage/VIN/Plate, plus
    PPF/ceramic coating/matte paint/vinyl wrap/convertible top/carbon fiber
-   flags (these don't change price, but drive "Vehicle Handling Notes" shown
+   flags (these don't change price, but drive "Technician Notes" shown
    on the estimate). Make + Model auto-classify the vehicle into a
-   **Vehicle Class** — Sports Car / Supercar / Luxury SUV / Performance Truck
+   **Vehicle Class** — Sports Car / Supercar / Performance Truck / Hypercar
    (`src/utils/classifyVehicle.ts`) — every vehicle gets priced, there's no
    "unsupported" case. Vehicle Class doubles as the pricing dimension every
    service is keyed on and is always a dropdown-click away from override.
-3. **Vehicle Inspection** — rate paint/wheel/interior/engine-bay findings
-   None → Light → Moderate → Heavy. This is the input to
-   `src/utils/recommendationEngine.ts`, which suggests a primary service, an
-   overall condition tier, and specific add-ons (each with a plain-language
-   reason), and flags anything outside detailing's scope (e.g. existing
-   wheel damage) as a caution rather than a bogus recommendation.
-4. **Service & Condition**, **Premium Upgrades** — the suggestions from Step 3
-   show up as a "Recommended" banner and a dedicated "Recommended Upgrades"
-   section here; accepting one is still an explicit click since it changes
-   the price. Only two upgrades exist (Engine Bay Detail, Leather
-   Conditioning) — paint decontamination is bundled into Paint Enhancement
-   Detail rather than sold separately.
-5. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
+3. **Primary Service** — one of four services (Interior Detail, Exterior
+   Detail, Full Detail, Paint Enhancement Detail), each with its exact
+   "includes" checklist and the equipment used.
+4. **Condition & Findings** — three plain dropdowns. Exterior Condition is
+   the only one that changes price: a single flat surcharge covering all
+   forms of exterior contamination together (bugs, brake dust, road film,
+   tar, tree sap, fallout) rather than itemized charges. Interior Condition
+   and Paint Condition (the latter only shown when Paint Enhancement Detail
+   is selected) are technician notes only — they never change price.
+5. **Premium Upgrades** — only the upgrades valid for the selected service
+   are shown; one already bundled into the package (e.g. Iron Removal / Clay
+   Mitt Decontamination on Paint Enhancement Detail) is hidden rather than
+   shown disabled, since it's redundant, not a choice. Switching services
+   automatically drops any selected upgrade that's no longer valid.
+6. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
    shots, compressed client-side and attached to the saved estimate).
 
 The right-hand column shows the client-facing estimate — itemized pricing
-with a "why" under every adjustment, pulled straight from the inspection
-findings and labeled "Exotic Vehicle Handling & Protection" for the
-classification line — plus a separate, staff-only **Profitability Panel**
-(labor hours, crew size, labor/chemical/travel cost, gross profit, gross
-margin, revenue per labor hour, and a margin warning below 45%). That panel
-is never part of print, PDF export, or the copied estimate text; see
-"Print & PDF" below for how that separation is enforced structurally, not
-just visually.
+with a "why" under every adjustment, labeled "Exotic Vehicle Handling &
+Protection" for the classification line — plus a separate, staff-only
+**Business Summary** (estimated labor hours, labor/material/travel cost,
+gross profit, gross margin, revenue per labor hour, and a margin warning
+below 45%). That panel is never part of print, PDF export, or the copied
+estimate text; see "Print & PDF" below for how that separation is enforced
+structurally, not just visually.
 
 ## Editing prices
 
-Every number in the app — service prices, vehicle class/condition
-multipliers, upgrade pricing, travel rates, discount percentages, labor rate,
-chemical/travel costs, the margin-warning threshold, and team-size
-thresholds — lives in one file:
+Every number and word in the app — equipment, vehicle classes, condition
+surcharges, service pricing/descriptions, add-ons, travel, discounts, and
+labor/material assumptions — lives in one file:
 
 ```
 src/config/pricingConfig.ts
 ```
 
 Services are priced per vehicle class explicitly (`basePriceByClass: {
-'sports-car', supercar, 'luxury-suv', 'performance-truck' }`) rather than one
+'sports-car', supercar, 'performance-truck', hypercar }`) rather than one
 number × a multiplier, since real class pricing isn't a clean ratio across
 every package — edit whichever class's number needs to change without
 touching the others. The cheapest class (Sports Car) is the pricing baseline;
 the "Exotic Vehicle Handling & Protection" line on the estimate is just the
 delta between that baseline and the selected class's price for the chosen
-service. Edit any value and every screen updates automatically; no pricing is
-hardcoded anywhere else in the app. The inspection checklist itself
-(`src/config/inspectionConfig.ts`) and the vehicle classification rules
-(inside each `vehicleTypes` entry in `pricingConfig.ts`) are similarly
-data-driven — add a checklist item or a new recognized nameplate/keyword
-without touching any component code.
+service. A separate `multiplier` on each vehicle class scales labor hours and
+material cost only (never price) to reflect the extra time/care a pricier
+class actually takes. Edit any value and every screen updates automatically;
+no pricing is hardcoded anywhere else in the app. Exterior/Interior/Paint
+condition tiers and the vehicle classification rules (inside each
+`vehicleTypes` entry) are similarly data-driven — add a tier or a new
+recognized nameplate/keyword without touching any component code.
+
+Premium Upgrades each carry an `availableForServiceIds` list — an upgrade is
+hidden entirely (not just disabled) on any service where it's already
+included, e.g. Iron Removal / Clay Mitt Decontamination on Paint Enhancement
+Detail, which already bundles both.
 
 A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 45% by default): each service's `baseLaborHours` was calibrated so the
@@ -88,7 +94,7 @@ A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 warning is meant to catch a discount (or an unusually labor-heavy job)
 eating into margin, not to fire on every normal job. If you change a
 service's price or labor hours, it's worth sanity-checking the baseline
-margin in the staff panel still clears 45%.
+margin in the Business Summary still clears 45%.
 
 ## Print & PDF
 

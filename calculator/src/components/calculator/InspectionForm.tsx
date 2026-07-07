@@ -1,90 +1,56 @@
-// Step 3 — the inspection walkthrough. Every finding here feeds the
-// recommendation engine: service suggestions, add-on suggestions, the
-// condition tier, and the "why" findings printed on the estimate.
+// Step 4 — Condition & Findings. Simplified to three plain dropdowns:
+// Exterior Condition is the only one that changes price (a flat surcharge
+// covering all forms of exterior contamination together); Interior and
+// Paint condition are technician notes only. Paint Condition only appears
+// when Paint Enhancement Detail is the selected service.
 
-import { Sparkles, CircleDot, Sofa, Cog } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
 import { SectionHeading } from '../ui/SectionHeading'
-import { SeverityPicker } from '../ui/SeverityPicker'
-import { inspectionConfig } from '../../config/inspectionConfig'
-import type { InspectionCategory, InspectionState, SeverityLevel } from '../../types'
+import { SelectField } from '../ui/SelectField'
+import { pricingConfig } from '../../config/pricingConfig'
+import type { ConditionTierId, EstimateSelections } from '../../types'
 
 interface InspectionFormProps {
-  inspection: InspectionState
-  onChangeSeverity: (category: InspectionCategory, itemId: string, level: SeverityLevel) => void
+  selections: EstimateSelections
+  onChange: <K extends keyof EstimateSelections>(key: K, value: EstimateSelections[K]) => void
 }
 
-export function InspectionForm({ inspection, onChangeSeverity }: InspectionFormProps) {
+export function InspectionForm({ selections, onChange }: InspectionFormProps) {
+  const showPaintCondition = selections.serviceId === 'paint-enhancement'
+
   return (
     <GlassPanel className="p-6" delay={0.08}>
-      <SectionHeading eyebrow="Step Three" title="Vehicle Inspection" icon={<Sparkles className="h-5 w-5" />} />
+      <SectionHeading eyebrow="Step Four" title="Condition & Findings" icon={<Sparkles className="h-5 w-5" />} />
       <p className="mb-5 -mt-2 text-sm text-slate-400">
-        Rate what you find. Findings here automatically drive the recommended service, add-ons, and condition tier.
+        Exterior Condition adjusts price. Interior and Paint condition are technician notes only.
       </p>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <InspectionCategoryCard
-          title="Paint Condition"
-          icon={<CircleDot className="h-4 w-4" />}
-          items={inspectionConfig.paint}
-          state={inspection.paint}
-          onChange={(id, level) => onChangeSeverity('paint', id, level)}
+      <div className={`grid grid-cols-1 gap-4 ${showPaintCondition ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+        <SelectField
+          label="Exterior Condition"
+          value={selections.exteriorConditionId}
+          onChange={(v) => onChange('exteriorConditionId', v as ConditionTierId)}
+          options={pricingConfig.exteriorConditions.map((c) => ({ value: c.id, label: c.label }))}
+          hint="Bugs, brake dust, road film, tar, tree sap, fallout, and general contamination"
         />
-        <InspectionCategoryCard
-          title="Wheel Condition"
-          icon={<CircleDot className="h-4 w-4" />}
-          items={inspectionConfig.wheels}
-          state={inspection.wheels}
-          onChange={(id, level) => onChangeSeverity('wheels', id, level)}
+        <SelectField
+          label="Interior Condition"
+          value={selections.interiorConditionId}
+          onChange={(v) => onChange('interiorConditionId', v as ConditionTierId)}
+          options={pricingConfig.interiorConditions.map((c) => ({ value: c.id, label: c.label }))}
+          hint="Notes only — no price impact"
         />
-        <InspectionCategoryCard
-          title="Interior Condition"
-          icon={<Sofa className="h-4 w-4" />}
-          items={inspectionConfig.interior}
-          state={inspection.interior}
-          onChange={(id, level) => onChangeSeverity('interior', id, level)}
-        />
-        <InspectionCategoryCard
-          title="Engine Bay"
-          icon={<Cog className="h-4 w-4" />}
-          items={inspectionConfig.engineBay}
-          state={inspection.engineBay}
-          onChange={(id, level) => onChangeSeverity('engineBay', id, level)}
-        />
+        {showPaintCondition && (
+          <SelectField
+            label="Paint Condition"
+            value={selections.paintConditionId}
+            onChange={(v) => onChange('paintConditionId', v as ConditionTierId)}
+            options={pricingConfig.paintConditions.map((c) => ({ value: c.id, label: c.label }))}
+            hint="Notes only — no price impact"
+          />
+        )}
       </div>
     </GlassPanel>
-  )
-}
-
-function InspectionCategoryCard({
-  title,
-  icon,
-  items,
-  state,
-  onChange,
-}: {
-  title: string
-  icon: React.ReactNode
-  items: { id: string; label: string }[]
-  state: Record<string, SeverityLevel>
-  onChange: (id: string, level: SeverityLevel) => void
-}) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-      <div className="mb-1 flex items-center gap-2 text-[#C9A227]">
-        {icon}
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-300">{title}</h3>
-      </div>
-      <div className="divide-y divide-white/5">
-        {items.map((item) => (
-          <SeverityPicker
-            key={item.id}
-            label={item.label}
-            value={(state[item.id] ?? 0) as SeverityLevel}
-            onChange={(level) => onChange(item.id, level)}
-          />
-        ))}
-      </div>
-    </div>
   )
 }

@@ -1,21 +1,19 @@
 // Owns all live form state for the calculator screen: client, vehicle,
-// inspection, pricing selections, and photos. Derives recommendations and
-// the priced EstimateResult on every change via useMemo.
+// pricing selections, and photos. Derives the priced EstimateResult on
+// every change via useMemo.
 //
-// Two fields auto-sync from other state but stay fully overridable: vehicle
-// classification (from Make/Model) and condition tier (from the inspection
-// findings). Each tracks "the last value we auto-set" in a ref — if the
-// current value still matches that, we know the user hasn't overridden it
-// and it's safe to keep auto-updating; the moment they pick something else
-// manually, we stop touching it until the underlying signal changes again.
+// Vehicle Class auto-syncs from Make/Model but stays fully overridable: a
+// ref tracks "the last value we auto-set" — if the current value still
+// matches that, we know the user hasn't overridden it and it's safe to keep
+// auto-updating; the moment they pick something else manually, we stop
+// touching it until the underlying signal changes again.
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ClientDraft, EstimateSelections, EstimatePhoto, InspectionState, VehicleInfo } from '../types'
+import type { ClientDraft, EstimateSelections, EstimatePhoto, VehicleInfo } from '../types'
 import { calculateEstimate, defaultSelections } from '../utils/calculateEstimate'
 import { previewNextEstimateNumber } from '../utils/estimateNumber'
 import { classifyVehicle } from '../utils/classifyVehicle'
-import { computeRecommendations } from '../utils/recommendationEngine'
-import { emptyInspectionState } from '../config/inspectionConfig'
+import { pricingConfig } from '../config/pricingConfig'
 
 function emptyClientDraft(): ClientDraft {
   return { id: null, name: '', phone: '', email: '', address: '', notes: '' }
@@ -42,17 +40,14 @@ function emptyVehicleInfo(): VehicleInfo {
 export function useEstimateForm() {
   const [client, setClient] = useState<ClientDraft>(emptyClientDraft())
   const [vehicle, setVehicle] = useState<VehicleInfo>(emptyVehicleInfo())
-  const [inspection, setInspection] = useState<InspectionState>(() => emptyInspectionState())
   const [selections, setSelections] = useState<EstimateSelections>(defaultSelections())
   const [photos, setPhotos] = useState<EstimatePhoto[]>([])
   const [estimateNumber, setEstimateNumber] = useState(() => previewNextEstimateNumber())
   const [createdAt, setCreatedAt] = useState(() => new Date().toISOString())
 
   const classification = useMemo(() => classifyVehicle(vehicle.make, vehicle.model), [vehicle.make, vehicle.model])
-  const recommendations = useMemo(() => computeRecommendations(inspection), [inspection])
 
   const lastAutoVehicleType = useRef<string | null>(selections.vehicleTypeId)
-  const lastAutoCondition = useRef<string | null>(selections.conditionId)
 
   // Auto-classify vehicle class from Make/Model, unless the user has since
   // overridden the Vehicle Class select away from our last suggestion.
@@ -71,19 +66,19 @@ export function useEstimateForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classification, selections.vehicleTypeId])
 
-  // Auto-suggest condition tier from inspection severity, same override rule.
+  // Drop any selected add-on that isn't valid for the currently selected
+  // service (e.g. Iron Removal was picked, then the service changed to
+  // Paint Enhancement, which already includes it).
   useEffect(() => {
-    if (selections.conditionId !== lastAutoCondition.current) return
-    if (selections.conditionId === recommendations.suggestedConditionId) return
-    lastAutoCondition.current = recommendations.suggestedConditionId
-    setSelections((prev) => ({ ...prev, conditionId: recommendations.suggestedConditionId }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recommendations.suggestedConditionId, selections.conditionId])
+    setSelections((prev) => {
+      const addOn = pricingConfig.addOns
+      const validIds = prev.addOnIds.filter((id) => addOn.find((a) => a.id === id)?.availableForServiceIds.includes(prev.serviceId))
+      if (validIds.length === prev.addOnIds.length) return prev
+      return { ...prev, addOnIds: validIds }
+    })
+  }, [selections.serviceId])
 
-  const result = useMemo(
-    () => calculateEstimate(selections, recommendations.findings, recommendations.addOnReasons),
-    [selections, recommendations],
-  )
+  const result = useMemo(() => calculateEstimate(selections), [selections])
 
   function updateClient<K extends keyof ClientDraft>(key: K, value: ClientDraft[K]) {
     setClient((prev) => ({ ...prev, [key]: value }))
@@ -105,10 +100,6 @@ export function useEstimateForm() {
     setSelections((prev) => ({ ...prev, [key]: value }))
   }
 
-  function setInspectionSeverity(category: keyof InspectionState, itemId: string, level: number) {
-    setInspection((prev) => ({ ...prev, [category]: { ...prev[category], [itemId]: level } }))
-  }
-
   function toggleAddOn(id: string) {
     setSelections((prev) => ({
       ...prev,
@@ -127,23 +118,19 @@ export function useEstimateForm() {
   function reset() {
     setClient(emptyClientDraft())
     setVehicle(emptyVehicleInfo())
-    setInspection(emptyInspectionState())
     setSelections(defaultSelections())
     setPhotos([])
     setEstimateNumber(previewNextEstimateNumber())
     setCreatedAt(new Date().toISOString())
     lastAutoVehicleType.current = defaultSelections().vehicleTypeId
-    lastAutoCondition.current = defaultSelections().conditionId
   }
 
   return {
     client,
     vehicle,
-    inspection,
     selections,
     photos,
     result,
-    recommendations,
     classification,
     estimateNumber,
     createdAt,
@@ -152,7 +139,6 @@ export function useEstimateForm() {
     updateVehicle,
     replaceVehicle,
     updateSelection,
-    setInspectionSeverity,
     toggleAddOn,
     addPhoto,
     removePhoto,

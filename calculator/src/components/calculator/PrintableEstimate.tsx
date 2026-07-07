@@ -1,11 +1,11 @@
 // The physical print output — rendered via a portal into #print-root (see
 // index.css), a sibling of #root rather than a descendant of it. Deliberately
 // plain, light, ink-friendly markup: no dark glass theme, no internal
-// profitability data (it's simply never passed in).
+// business figures (it's simply never passed in).
 
 import { pricingConfig } from '../../config/pricingConfig'
 import { formatCurrency, formatDate, formatSignedCurrency } from '../../utils/format'
-import { buildVehicleHandlingNotes } from '../../utils/vehicleHandlingNotes'
+import { buildTechnicianNotes } from '../../utils/vehicleHandlingNotes'
 import type { ClientDraft, EstimateResult, EstimateSelections, VehicleInfo } from '../../types'
 
 interface PrintableEstimateProps {
@@ -20,7 +20,7 @@ interface PrintableEstimateProps {
 export function PrintableEstimate({ client, vehicle, selections, result, estimateNumber, createdAt }: PrintableEstimateProps) {
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
-  const handlingNotes = buildVehicleHandlingNotes(vehicle)
+  const technicianNotes = buildTechnicianNotes(vehicle, selections)
 
   return (
     <div className="mx-auto max-w-2xl bg-white px-10 py-10 text-[#1a1d29]" style={{ fontFamily: 'Georgia, serif' }}>
@@ -46,11 +46,11 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
         </div>
       )}
 
-      {handlingNotes.length > 0 && (
+      {technicianNotes.length > 0 && (
         <div className="mb-6 border-t border-amber-200 bg-amber-50 px-4 py-3">
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">Vehicle Handling Notes</p>
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-700">Technician Notes</p>
           <ul className="space-y-0.5">
-            {handlingNotes.map((note) => (
+            {technicianNotes.map((note) => (
               <li key={note} className="text-xs text-amber-800">
                 {note}
               </li>
@@ -70,19 +70,16 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
         <Row label={`Base Service — ${result.baseService.label}`} value={formatCurrency(result.baseService.amount)} />
 
         <Row label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} value={formatSignedCurrency(result.vehicleComplexity.amount)} muted />
-        {result.vehicleComplexity.factors && result.vehicleComplexity.factors.length > 0 && <Note text={result.vehicleComplexity.factors.join(' · ')} />}
+        {result.vehicleComplexity.factors && result.vehicleComplexity.factors.filter(Boolean).length > 0 && <Note text={result.vehicleComplexity.factors.filter(Boolean).join(' · ')} />}
 
-        <Row label={`Condition & Findings — ${result.conditionFindings.label}`} value={formatSignedCurrency(result.conditionFindings.amount)} muted />
-        {result.conditionFindings.factors && result.conditionFindings.factors.length > 0 && <Note text={result.conditionFindings.factors.join(' · ')} />}
+        <Row label={`Exterior Condition — ${result.exteriorCondition.label}`} value={formatSignedCurrency(result.exteriorCondition.amount)} muted />
+        {result.exteriorCondition.factors && result.exteriorCondition.factors.filter(Boolean).length > 0 && <Note text={result.exteriorCondition.factors.filter(Boolean).join(' · ')} />}
 
         {result.addOnLineItems.length > 0 && (
           <div className="mt-2 border-t border-gray-100 pt-2">
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Premium Upgrades</p>
             {result.addOnLineItems.map((item) => (
-              <div key={item.label}>
-                <Row label={item.label} value={formatCurrency(item.amount)} muted />
-                {item.reason && <Note text={item.reason} />}
-              </div>
+              <Row key={item.label} label={item.label} value={formatCurrency(item.amount)} muted />
             ))}
           </div>
         )}

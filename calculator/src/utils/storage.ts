@@ -3,14 +3,15 @@
 // namespaced under a single prefix so it never collides with anything else
 // on the domain.
 //
-// Storage keys are versioned (`-v2`) because the estimate/client shape
-// changed in V2 (client database, inspection, photos). Bumping the suffix
-// again in the future is the intended way to migrate a breaking shape
-// change without writing a migration script for a browser-only data store.
+// Storage keys are versioned (`-v3`) because the estimate shape changed
+// again when the pricing model moved to Vehicle Class + simplified
+// Condition & Findings. Bumping the suffix again in the future is the
+// intended way to migrate a breaking shape change without writing a
+// migration script for a browser-only data store.
 
 import type { ClientRecord, SavedEstimate } from '../types'
 
-const ESTIMATES_KEY = 'hh-estimates-v2'
+const ESTIMATES_KEY = 'hh-estimates-v3'
 const CLIENTS_KEY = 'hh-clients-v2'
 const COUNTER_KEY = 'hh-estimate-counter-v1'
 

@@ -1,11 +1,11 @@
 // Builds a clean, plain-text version of an estimate for the "Copy Estimate"
 // button — suitable for pasting into an email, text message, or CRM note.
-// Client-facing only: no labor hours, team size, or cost/margin figures.
+// Client-facing only: no labor hours or cost/margin figures.
 
 import type { EstimateResult, EstimateSelections, VehicleInfo } from '../types'
 import { pricingConfig } from '../config/pricingConfig'
 import { formatCurrency, formatDate, formatSignedCurrency } from './format'
-import { buildVehicleHandlingNotes } from './vehicleHandlingNotes'
+import { buildTechnicianNotes } from './vehicleHandlingNotes'
 
 function findLabel(id: string, items: { id: string; label: string }[]): string {
   return items.find((i) => i.id === id)?.label ?? id
@@ -29,25 +29,22 @@ export function buildEstimateText(
   if (vehicleLine) lines.push(`Vehicle: ${vehicleLine}${vehicle.color ? ` (${vehicle.color})` : ''}`)
   if (vehicle.licensePlate) lines.push(`Plate: ${vehicle.licensePlate}`)
   lines.push(`Vehicle Class: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
-  lines.push(`Condition: ${findLabel(selections.conditionId, pricingConfig.conditions)}`)
-  const handlingNotes = buildVehicleHandlingNotes(vehicle)
-  if (handlingNotes.length > 0) {
+  lines.push(`Exterior Condition: ${findLabel(selections.exteriorConditionId, pricingConfig.exteriorConditions)}`)
+  const technicianNotes = buildTechnicianNotes(vehicle, selections)
+  if (technicianNotes.length > 0) {
     lines.push('')
-    lines.push('— Vehicle Handling Notes —')
-    handlingNotes.forEach((note) => lines.push(`  • ${note}`))
+    lines.push('— Technician Notes —')
+    technicianNotes.forEach((note) => lines.push(`  • ${note}`))
   }
   lines.push('')
   lines.push('— Pricing —')
   lines.push(`Base Service (${result.baseService.label}): ${formatCurrency(result.baseService.amount)}`)
   lines.push(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
-  if (result.vehicleComplexity.factors?.length) lines.push(`  ${result.vehicleComplexity.factors.join(' · ')}`)
-  lines.push(`Condition & Findings — ${result.conditionFindings.label}: ${formatSignedCurrency(result.conditionFindings.amount)}`)
-  if (result.conditionFindings.factors?.length) lines.push(`  ${result.conditionFindings.factors.join(' · ')}`)
+  lines.push(`Exterior Condition — ${result.exteriorCondition.label}: ${formatSignedCurrency(result.exteriorCondition.amount)}`)
   if (result.addOnLineItems.length) {
     lines.push('Premium Upgrades:')
     result.addOnLineItems.forEach((item) => {
       lines.push(`  • ${item.label}: ${formatCurrency(item.amount)}`)
-      if (item.reason) lines.push(`    ${item.reason}`)
     })
   }
   lines.push(`Travel Fee (${result.travelMilesBilled} billable mi): ${formatCurrency(result.travelFee)}`)

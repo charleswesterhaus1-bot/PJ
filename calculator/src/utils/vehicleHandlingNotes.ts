@@ -1,10 +1,10 @@
-// Special surfaces/finishes (PPF, ceramic coating, matte paint, wraps,
-// soft tops, exposed carbon fiber) don't change price, but they do change
-// which products and techniques are safe to use. This turns those vehicle
-// attributes into plain-language notes shown on the estimate so nobody on
-// the job forgets and reaches for the wrong bottle.
+// Technician notes — special surfaces/finishes (PPF, ceramic coating, matte
+// paint, wraps, soft tops, exposed carbon fiber) plus interior/paint
+// condition findings. None of these change price; they just travel with the
+// estimate so nobody on the job forgets and reaches for the wrong product.
 
-import type { VehicleInfo } from '../types'
+import { pricingConfig } from '../config/pricingConfig'
+import type { EstimateSelections, VehicleInfo } from '../types'
 
 export function buildVehicleHandlingNotes(vehicle: VehicleInfo): string[] {
   const notes: string[] = []
@@ -18,7 +18,7 @@ export function buildVehicleHandlingNotes(vehicle: VehicleInfo): string[] {
   }
 
   if (vehicle.ceramicCoating === 'yes') {
-    notes.push('Ceramic coating present — use coating-safe wash soap; avoid stacking additional paint sealant unless requested.')
+    notes.push('Ceramic coating present — use coating-safe wash soap and avoid harsh chemicals directly on coated panels.')
   }
 
   if (vehicle.mattePaint) {
@@ -38,4 +38,25 @@ export function buildVehicleHandlingNotes(vehicle: VehicleInfo): string[] {
   }
 
   return notes
+}
+
+/** Interior/Paint condition findings, added alongside the vehicle handling
+ * notes above — together these make up the full "Technician Notes" panel.
+ * Paint condition only applies when Paint Enhancement Detail is selected. */
+export function buildConditionNotes(selections: EstimateSelections): string[] {
+  const notes: string[] = []
+
+  const interiorTier = pricingConfig.interiorConditions.find((c) => c.id === selections.interiorConditionId)
+  if (interiorTier && interiorTier.note) notes.push(interiorTier.note)
+
+  if (selections.serviceId === 'paint-enhancement') {
+    const paintTier = pricingConfig.paintConditions.find((c) => c.id === selections.paintConditionId)
+    if (paintTier && paintTier.note) notes.push(paintTier.note)
+  }
+
+  return notes
+}
+
+export function buildTechnicianNotes(vehicle: VehicleInfo, selections: EstimateSelections): string[] {
+  return [...buildVehicleHandlingNotes(vehicle), ...buildConditionNotes(selections)]
 }

@@ -1,23 +1,14 @@
 // Shared type definitions for the Hangar & Harbor Estimate Console.
-// Keeping these centralized means config, engines, and UI components all
+// Keeping these centralized means config, calculation, and UI components all
 // agree on the same shapes.
-
-/** 0 = not present, 1 = light, 2 = moderate, 3 = heavy. */
-export type SeverityLevel = 0 | 1 | 2 | 3
-
-export const SEVERITY_LABELS: Record<SeverityLevel, string> = {
-  0: 'None',
-  1: 'Light',
-  2: 'Moderate',
-  3: 'Heavy',
-}
 
 /** A named multiplier used throughout the pricing engine, with the
  * plain-language reasons a client would accept as justification. */
 export interface RateOption {
   id: string
   label: string
-  /** Multiplier applied to the running subtotal, e.g. 1.15 = +15% */
+  /** Multiplier applied to labor hours and material cost only — never to
+   * price, which is looked up directly per class/service. */
   multiplier: number
   description?: string
   /** Bullet-point reasons shown on the estimate to justify the adjustment. */
@@ -31,7 +22,7 @@ export interface VehicleClassificationRule {
   modelKeywords: string[]
 }
 
-export type VehicleClassId = 'sports-car' | 'supercar' | 'luxury-suv' | 'performance-truck'
+export type VehicleClassId = 'sports-car' | 'supercar' | 'performance-truck' | 'hypercar'
 
 /** A primary detailing service/package — the base line of an estimate.
  * Priced explicitly per vehicle class rather than a single base × multiplier,
@@ -44,21 +35,24 @@ export interface ServiceOption {
   includes: string[]
   basePriceByClass: Record<VehicleClassId, number>
   baseLaborHours: number
-  /** Estimated product/consumable cost at the "Sports Car" baseline class — internal only. */
-  chemicalCost: number
+  /** Estimated product/material cost at the "Sports Car" baseline class — internal only. */
+  materialCost: number
   /** Equipment/products actually used, from our current inventory. */
   equipmentUsed: string[]
 }
 
-/** An optional upgrade with its own flat price and labor contribution. */
+/** An optional upgrade with its own flat price and labor contribution.
+ * Only offered on the primary services listed in `availableForServiceIds` —
+ * hidden entirely when the selected service already includes it. */
 export interface AddOnOption {
   id: string
   label: string
   includes: string[]
   price: number
   laborHours: number
-  chemicalCost: number
+  materialCost: number
   equipmentUsed: string[]
+  availableForServiceIds: string[]
 }
 
 export type DiscountKind = 'military' | 'repeatClient' | 'referral' | 'portfolioVehicle' | 'custom'
@@ -71,13 +65,6 @@ export interface DiscountOption {
   description?: string
 }
 
-export interface TeamSizeThreshold {
-  /** If total labor hours are <= this value, this team size is suggested. */
-  maxLaborHours: number
-  teamSize: number
-  label: string
-}
-
 export interface TravelConfig {
   freeMiles: number
   pricePerMile: number
@@ -86,9 +73,6 @@ export interface TravelConfig {
 export interface LaborConfig {
   /** Shop labor rate used to derive internal cost/margin figures. */
   ratePerHour: number
-  teamSizeThresholds: TeamSizeThreshold[]
-  /** Round the estimated appointment length to the nearest fraction of an hour. */
-  appointmentRoundingHours: number
   /** Internal fuel/vehicle-wear cost per mile driven — separate from the
    * client-facing travel fee, which only bills miles beyond the free radius. */
   travelCostPerMile: number
@@ -128,6 +112,30 @@ export interface FeatureFlags {
   analytics: boolean
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Condition & Findings — simplified inspection
+// ─────────────────────────────────────────────────────────────────────────
+
+export type ConditionTierId = 'excellent' | 'light' | 'moderate' | 'heavy'
+
+/** Exterior Condition is the only condition tier that changes price — a flat
+ * surcharge covering bugs, brake dust, road film, tar, tree sap, fallout, and
+ * general contamination as a single bucket rather than itemized charges. */
+export interface ExteriorConditionTier {
+  id: ConditionTierId
+  label: string
+  surcharge: number
+  note: string
+}
+
+/** Interior and Paint condition are technician notes only — they never
+ * change price, they just travel with the estimate for the tech's benefit. */
+export interface NoteOnlyConditionTier {
+  id: ConditionTierId
+  label: string
+  note: string
+}
+
 export interface PricingConfig {
   company: {
     name: string
@@ -136,10 +144,12 @@ export interface PricingConfig {
   equipment: EquipmentItem[]
   /** Vehicle Class doubles as both the classification shown to staff and the
    * pricing dimension services are keyed on (`ServiceOption.basePriceByClass`).
-   * `multiplier` here scales labor hours and chemical cost only — price comes
+   * `multiplier` here scales labor hours and material cost only — price comes
    * directly from each service's per-class table. */
   vehicleTypes: (RateOption & { classification: VehicleClassificationRule })[]
-  conditions: RateOption[]
+  exteriorConditions: ExteriorConditionTier[]
+  interiorConditions: NoteOnlyConditionTier[]
+  paintConditions: NoteOnlyConditionTier[]
   services: ServiceOption[]
   addOns: AddOnOption[]
   travel: TravelConfig
@@ -150,48 +160,6 @@ export interface PricingConfig {
     aircraft: FutureDomainConfig
   }
   features: FeatureFlags
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// Inspection
-// ─────────────────────────────────────────────────────────────────────────
-
-export type InspectionCategory = 'paint' | 'wheels' | 'interior' | 'engineBay'
-
-export interface InspectionItemDef {
-  id: string
-  label: string
-}
-
-export interface InspectionConfig {
-  paint: InspectionItemDef[]
-  wheels: InspectionItemDef[]
-  interior: InspectionItemDef[]
-  engineBay: InspectionItemDef[]
-}
-
-/** Severity keyed by inspection item id, one map per category. */
-export type InspectionCategoryState = Record<string, SeverityLevel>
-
-export interface InspectionState {
-  paint: InspectionCategoryState
-  wheels: InspectionCategoryState
-  interior: InspectionCategoryState
-  engineBay: InspectionCategoryState
-}
-
-export interface RecommendationResult {
-  suggestedServiceId: string
-  suggestedConditionId: string
-  suggestedAddOnIds: string[]
-  /** Why each recommended add-on was suggested, keyed by add-on id. */
-  addOnReasons: Record<string, string>
-  serviceReason: string
-  /** Findings we can't address with detailing (existing damage, etc). */
-  cautions: string[]
-  /** Plain-language findings pulled straight from the inspection, used to
-   * justify the condition line on the estimate. */
-  findings: string[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -224,8 +192,8 @@ export interface VehicleInfo {
   mileage: string
   vin: string
   licensePlate: string
-  /** Special surfaces/finishes that change handling but not (yet) price —
-   * see utils/vehicleHandlingNotes.ts for the cautions these generate. */
+  /** Special surfaces/finishes that change handling but not price — see
+   * utils/vehicleHandlingNotes.ts for the technician notes these generate. */
   ppf: PpfCoverage
   ceramicCoating: TriState
   mattePaint: boolean
@@ -255,7 +223,9 @@ export interface EstimatePhoto {
 export interface EstimateSelections {
   serviceId: string
   vehicleTypeId: string
-  conditionId: string
+  exteriorConditionId: ConditionTierId
+  interiorConditionId: ConditionTierId
+  paintConditionId: ConditionTierId
   addOnIds: string[]
   travelMiles: number
   discountId: DiscountKind | 'none'
@@ -271,8 +241,8 @@ export interface EstimateLineItem {
 export interface EstimateResult {
   baseService: EstimateLineItem
   vehicleComplexity: EstimateLineItem
-  conditionFindings: EstimateLineItem
-  addOnLineItems: (EstimateLineItem & { reason?: string })[]
+  exteriorCondition: EstimateLineItem
+  addOnLineItems: EstimateLineItem[]
   addOnsTotal: number
   travelFee: number
   travelMilesBilled: number
@@ -283,11 +253,8 @@ export interface EstimateResult {
 
   // Internal-only — never rendered on the client-facing estimate.
   laborHours: number
-  teamSize: number
-  teamSizeLabel: string
-  appointmentLengthHours: number
   laborCost: number
-  chemicalCost: number
+  materialCost: number
   travelCost: number
   grossProfit: number
   marginPercent: number
@@ -303,7 +270,6 @@ export interface SavedEstimate {
   clientId: string | null
   client: ClientRecord
   vehicle: VehicleInfo
-  inspection: InspectionState
   selections: EstimateSelections
   result: EstimateResult
   photos: EstimatePhoto[]
