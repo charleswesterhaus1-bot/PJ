@@ -13,11 +13,12 @@ function findById<T extends { id: string }>(items: T[], id: string): T | undefin
 const BASELINE_CLASS: VehicleClassId = 'sports-car'
 
 export function calculateEstimate(selections: EstimateSelections): EstimateResult {
-  const { vehicleTypes, exteriorConditions, services, addOns, travel, discounts, labor } = pricingConfig
+  const { vehicleTypes, exteriorConditions, interiorConditions, services, addOns, travel, discounts, labor } = pricingConfig
 
   const service = findById(services, selections.serviceId) ?? services[0]
   const vehicleClass = findById(vehicleTypes, selections.vehicleTypeId) ?? vehicleTypes[0]
   const exteriorCondition = findById(exteriorConditions, selections.exteriorConditionId) ?? exteriorConditions[0]
+  const interiorCondition = findById(interiorConditions, selections.interiorConditionId) ?? interiorConditions[0]
 
   // Pricing is looked up per vehicle class directly (not a flat base ×
   // multiplier — real class pricing isn't a clean ratio across every
@@ -29,9 +30,10 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
   const afterClass = service.basePriceByClass[classId] ?? basePrice
   const vehicleComplexityAmount = afterClass - basePrice
 
-  // Exterior Condition is a flat surcharge — the same dollar amount
-  // regardless of vehicle class or selected service.
+  // Exterior and Interior Condition are each a flat surcharge — the same
+  // dollar amount regardless of vehicle class or selected service.
   const exteriorSurcharge = exteriorCondition.surcharge
+  const interiorSurcharge = interiorCondition.surcharge
 
   // Add-ons — only ones actually valid for the selected service are ever
   // passed in via selections.addOnIds (the UI hides/prunes the rest), but
@@ -47,7 +49,7 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
   const billableMiles = Math.max(0, selections.travelMiles - travel.freeMiles)
   const travelFee = billableMiles * travel.pricePerMile
 
-  const subtotal = afterClass + exteriorSurcharge + addOnsTotal + travelFee
+  const subtotal = afterClass + exteriorSurcharge + interiorSurcharge + addOnsTotal + travelFee
 
   // Discount
   let discountPercentage = 0
@@ -90,6 +92,7 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
     baseService: { label: service.label, amount: basePrice },
     vehicleComplexity: { label: vehicleClass.label, amount: vehicleComplexityAmount, factors: vehicleClass.factors },
     exteriorCondition: { label: exteriorCondition.label, amount: exteriorSurcharge, factors: [exteriorCondition.note] },
+    interiorCondition: { label: interiorCondition.label, amount: interiorSurcharge, factors: [interiorCondition.note] },
     addOnLineItems,
     addOnsTotal,
     travelFee,

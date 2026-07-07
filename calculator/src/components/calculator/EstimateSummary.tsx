@@ -133,6 +133,8 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
           <ExplainedRow label={`Exterior Condition — ${result.exteriorCondition.label}`} amount={result.exteriorCondition.amount} factors={result.exteriorCondition.factors} />
 
+          <ExplainedRow label={`Interior Condition — ${result.interiorCondition.label}`} amount={result.interiorCondition.amount} factors={result.interiorCondition.factors} />
+
           {result.addOnLineItems.length > 0 && (
             <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Premium Upgrades</p>

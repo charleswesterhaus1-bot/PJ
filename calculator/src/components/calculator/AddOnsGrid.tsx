@@ -1,7 +1,9 @@
 // Premium Upgrades grid. Only upgrades valid for the currently selected
 // service are shown — one already bundled into the selected package (e.g.
 // Iron Removal / Clay Mitt on Paint Enhancement) is hidden rather than
-// shown disabled, since it's redundant, not a choice.
+// shown disabled, since it's redundant, not a choice. Leather Conditioning
+// is additionally hidden unless the vehicle's interior material includes
+// leather.
 
 import { Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -10,15 +12,22 @@ import { SectionHeading } from '../ui/SectionHeading'
 import { Checkbox } from '../ui/Checkbox'
 import { pricingConfig } from '../../config/pricingConfig'
 import { formatCurrency } from '../../utils/format'
+import type { InteriorMaterial } from '../../types'
+
+const LEATHER_INTERIOR_MATERIALS: InteriorMaterial[] = ['leather', 'leather-alcantara']
 
 interface AddOnsGridProps {
   serviceId: string
+  interiorMaterial: InteriorMaterial
   selectedIds: string[]
   onToggle: (id: string) => void
 }
 
-export function AddOnsGrid({ serviceId, selectedIds, onToggle }: AddOnsGridProps) {
-  const available = pricingConfig.addOns.filter((a) => a.availableForServiceIds.includes(serviceId))
+export function AddOnsGrid({ serviceId, interiorMaterial, selectedIds, onToggle }: AddOnsGridProps) {
+  const hasLeatherInterior = LEATHER_INTERIOR_MATERIALS.includes(interiorMaterial)
+  const available = pricingConfig.addOns.filter(
+    (a) => a.availableForServiceIds.includes(serviceId) && (!a.requiresLeatherInterior || hasLeatherInterior),
+  )
 
   return (
     <GlassPanel className="p-6" delay={0.14}>

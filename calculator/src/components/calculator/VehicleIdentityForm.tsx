@@ -1,8 +1,10 @@
 // Step 2 — vehicle identity. Make/Model drive automatic classification into
 // Sports Car / Supercar / Performance Truck / Hypercar; the result is
 // shown as a badge with a manual override always available underneath.
-// Also captures special surfaces/finishes (PPF, ceramic coating, matte
-// paint, wraps, soft top, carbon fiber) that change handling, not price.
+// Interior Material is the one field here that isn't just a note — it's an
+// actual availability gate for the Leather Conditioning upgrade. Special
+// surfaces/finishes (PPF, ceramic coating, matte paint, soft top, carbon
+// fiber) change handling, not price.
 
 import { Gauge } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -11,7 +13,7 @@ import { TextField } from '../ui/TextField'
 import { SelectField } from '../ui/SelectField'
 import { Badge } from '../ui/Badge'
 import { pricingConfig } from '../../config/pricingConfig'
-import type { PpfCoverage, TriState, VehicleInfo } from '../../types'
+import type { InteriorMaterial, PpfCoverage, TriState, VehicleInfo } from '../../types'
 
 interface VehicleIdentityFormProps {
   vehicle: VehicleInfo
@@ -20,6 +22,13 @@ interface VehicleIdentityFormProps {
   vehicleTypeId: string
   onVehicleTypeChange: (id: string) => void
 }
+
+const INTERIOR_MATERIAL_OPTIONS: { value: InteriorMaterial; label: string }[] = [
+  { value: 'leather', label: 'Leather' },
+  { value: 'leather-alcantara', label: 'Leather & Alcantara' },
+  { value: 'alcantara', label: 'Alcantara' },
+  { value: 'other', label: 'Other' },
+]
 
 const PPF_OPTIONS: { value: PpfCoverage; label: string }[] = [
   { value: 'none', label: 'None' },
@@ -34,9 +43,8 @@ const TRI_STATE_OPTIONS: { value: TriState; label: string }[] = [
   { value: 'no', label: 'No' },
 ]
 
-const BOOLEAN_FLAGS: { key: 'mattePaint' | 'vinylWrap' | 'convertibleTop' | 'carbonFiberExterior'; label: string }[] = [
+const BOOLEAN_FLAGS: { key: 'mattePaint' | 'convertibleTop' | 'carbonFiberExterior'; label: string }[] = [
   { key: 'mattePaint', label: 'Matte Paint' },
-  { key: 'vinylWrap', label: 'Vinyl Wrap' },
   { key: 'convertibleTop', label: 'Convertible Soft Top' },
   { key: 'carbonFiberExterior', label: 'Carbon Fiber Exterior' },
 ]
@@ -74,6 +82,19 @@ export function VehicleIdentityForm({ vehicle, onChange, classification, vehicle
           />
         </div>
         {currentType?.description && <p className="mt-2 text-xs text-slate-500">{currentType.description}</p>}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+        <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-500">Interior Material</span>
+        <div className="max-w-xs">
+          <SelectField
+            label=""
+            value={vehicle.interiorMaterial}
+            onChange={(v) => onChange('interiorMaterial', v as InteriorMaterial)}
+            options={INTERIOR_MATERIAL_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          />
+        </div>
+        <p className="mt-2 text-xs text-slate-500">Determines whether Leather Conditioning is offered as a Premium Upgrade.</p>
       </div>
 
       <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.02] p-4">

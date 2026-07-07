@@ -50,10 +50,10 @@ export const pricingConfig: PricingConfig = {
       id: 'supercar',
       label: 'Supercar',
       multiplier: 1.12,
-      description: 'Ferrari, Lamborghini, McLaren, Audi R8, Lotus, and other exotic supercars',
+      description: 'Ferrari, Lamborghini, McLaren, Audi R8, Aston Martin, Bentley, Rolls-Royce, Lotus, and other exotic supercars',
       factors: ['Low ground clearance, wide-body fitment, and exotic materials require specialized handling and product care'],
       classification: {
-        makes: ['ferrari', 'lamborghini', 'mclaren', 'lotus'],
+        makes: ['ferrari', 'lamborghini', 'mclaren', 'lotus', 'aston martin', 'bentley', 'rolls-royce', 'rolls royce'],
         modelKeywords: ['gt3', 'turbo s', '911 gt', 'gt2', 'r8', 'z06', 'zr1', 'gt-r', 'gtr', 'amg gt'],
       },
     },
@@ -79,10 +79,10 @@ export const pricingConfig: PricingConfig = {
   ],
 
   // ── Condition & Findings ─────────────────────────────────────────────
-  // Exterior Condition is the only tier that changes price — one flat
-  // surcharge covering all forms of exterior contamination together rather
-  // than itemized charges. Interior and Paint condition are technician
-  // notes only.
+  // Exterior and Interior Condition each carry their own flat surcharge —
+  // one bucket covering all forms of contamination on that side of the
+  // vehicle rather than itemized charges. Paint condition is a technician
+  // note only.
   exteriorConditions: [
     { id: 'excellent', label: 'Excellent', surcharge: 0, note: 'Presented in showroom-ready condition — no additional exterior contamination charge.' },
     { id: 'light', label: 'Light Contamination', surcharge: 15, note: 'Light bugs, brake dust, road film, or fallout — minor added decontamination time.' },
@@ -90,10 +90,10 @@ export const pricingConfig: PricingConfig = {
     { id: 'heavy', label: 'Heavy Contamination', surcharge: 60, note: 'Heavy contamination across paint and wheels — significant additional decontamination time required.' },
   ],
   interiorConditions: [
-    { id: 'excellent', label: 'Excellent', note: '' },
-    { id: 'light', label: 'Light Soil', note: 'Interior shows light soiling — noted for the technician, no charge.' },
-    { id: 'moderate', label: 'Moderate Soil', note: 'Interior shows moderate soiling — noted for the technician, no charge.' },
-    { id: 'heavy', label: 'Heavy Soil', note: 'Interior shows heavy soiling — noted for the technician, no charge.' },
+    { id: 'excellent', label: 'Excellent', surcharge: 0, note: 'Interior presented in showroom-ready condition — no additional interior contamination charge.' },
+    { id: 'light', label: 'Light Contamination', surcharge: 15, note: 'Interior shows light contamination — minor added cleaning time.' },
+    { id: 'moderate', label: 'Moderate Contamination', surcharge: 30, note: 'Interior shows moderate contamination — additional cleaning time required.' },
+    { id: 'heavy', label: 'Heavy Contamination', surcharge: 60, note: 'Interior shows heavy contamination — significant additional cleaning time required.' },
   ],
   paintConditions: [
     { id: 'excellent', label: 'Excellent', note: '' },
@@ -196,16 +196,39 @@ export const pricingConfig: PricingConfig = {
   // `availableForServiceIds` hides an upgrade entirely on any service where
   // it's already included (e.g. Iron Removal / Clay Mitt on Paint
   // Enhancement) rather than showing it as a redundant, disabled option.
+  // Leather Conditioning additionally requires a leather-containing interior
+  // (`requiresLeatherInterior`) — see VehicleInfo.interiorMaterial.
   addOns: [
     {
       id: 'engine-bay',
       label: 'Engine Bay Detail',
-      includes: ['Safe rinse', 'Gentle cleaning', 'Detail brush work', 'Drying', 'CARPRO PERL dressing where appropriate'],
+      includes: ['Safe rinse where appropriate', 'Gentle cleaning', 'Detail brush work', 'Drying', 'CARPRO PERL dressing'],
       price: 75,
       laborHours: 0.35,
       materialCost: 8,
       equipmentUsed: ['Active 2.0 Pressure Washer', 'Detail Brushes', 'Premium Drying Towels', 'CARPRO PERL'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
+    },
+    {
+      id: 'steam-interior',
+      label: 'Steam Interior Treatment',
+      includes: ['Steam cleaning of hard surfaces', 'Vents', 'Cup holders', 'Buttons', 'Door handles', 'High-touch sanitization'],
+      price: 40,
+      laborHours: 0.15,
+      materialCost: 6,
+      equipmentUsed: ['McCulloch Steam Cleaner', 'Detail Brushes', 'Microfiber Towels'],
+      availableForServiceIds: ['interior-detail', 'full-detail', 'paint-enhancement'],
+    },
+    {
+      id: 'leather-conditioning',
+      label: 'Leather Conditioning',
+      includes: ['Leather Honey Conditioner', 'UV protection', 'Leather nourishment'],
+      price: 40,
+      laborHours: 0.15,
+      materialCost: 7,
+      equipmentUsed: ['Leather Honey Cleaner/Conditioner'],
+      availableForServiceIds: ['interior-detail', 'full-detail', 'paint-enhancement'],
+      requiresLeatherInterior: true,
     },
     {
       id: 'iron-removal',
@@ -221,8 +244,8 @@ export const pricingConfig: PricingConfig = {
       id: 'clay-decon',
       label: 'Clay Mitt Decontamination',
       includes: ['Nanoskin clay mitt treatment', 'Removes bonded surface contaminants for a glass-smooth finish'],
-      price: 70,
-      laborHours: 0.35,
+      price: 65,
+      laborHours: 0.32,
       materialCost: 5,
       equipmentUsed: ['Nanoskin Clay Mitt'],
       availableForServiceIds: ['exterior-detail', 'full-detail'],

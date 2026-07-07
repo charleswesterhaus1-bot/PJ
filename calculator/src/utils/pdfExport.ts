@@ -182,6 +182,9 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
   priceRow(`Exterior Condition — ${result.exteriorCondition.label}`, formatSignedCurrency(result.exteriorCondition.amount), { muted: true })
   if (result.exteriorCondition.factors?.filter(Boolean).length) wrappedNote(result.exteriorCondition.factors.filter(Boolean).join(' · '))
 
+  priceRow(`Interior Condition — ${result.interiorCondition.label}`, formatSignedCurrency(result.interiorCondition.amount), { muted: true })
+  if (result.interiorCondition.factors?.filter(Boolean).length) wrappedNote(result.interiorCondition.factors.filter(Boolean).join(' · '))
+
   if (result.addOnLineItems.length > 0) {
     y += 4
     sectionLabel('Premium Upgrades')

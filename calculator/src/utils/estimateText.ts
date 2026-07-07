@@ -30,6 +30,7 @@ export function buildEstimateText(
   if (vehicle.licensePlate) lines.push(`Plate: ${vehicle.licensePlate}`)
   lines.push(`Vehicle Class: ${findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)}`)
   lines.push(`Exterior Condition: ${findLabel(selections.exteriorConditionId, pricingConfig.exteriorConditions)}`)
+  lines.push(`Interior Condition: ${findLabel(selections.interiorConditionId, pricingConfig.interiorConditions)}`)
   const technicianNotes = buildTechnicianNotes(vehicle, selections)
   if (technicianNotes.length > 0) {
     lines.push('')
@@ -41,6 +42,7 @@ export function buildEstimateText(
   lines.push(`Base Service (${result.baseService.label}): ${formatCurrency(result.baseService.amount)}`)
   lines.push(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
   lines.push(`Exterior Condition — ${result.exteriorCondition.label}: ${formatSignedCurrency(result.exteriorCondition.amount)}`)
+  lines.push(`Interior Condition — ${result.interiorCondition.label}: ${formatSignedCurrency(result.interiorCondition.amount)}`)
   if (result.addOnLineItems.length) {
     lines.push('Premium Upgrades:')
     result.addOnLineItems.forEach((item) => {

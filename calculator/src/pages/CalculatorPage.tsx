@@ -134,7 +134,12 @@ export function CalculatorPage({ prefillClient, onConsumePrefill }: CalculatorPa
         />
         <ServiceConditionForm selections={form.selections} onChange={form.updateSelection} />
         <InspectionForm selections={form.selections} onChange={form.updateSelection} />
-        <AddOnsGrid serviceId={form.selections.serviceId} selectedIds={form.selections.addOnIds} onToggle={form.toggleAddOn} />
+        <AddOnsGrid
+          serviceId={form.selections.serviceId}
+          interiorMaterial={form.vehicle.interiorMaterial}
+          selectedIds={form.selections.addOnIds}
+          onToggle={form.toggleAddOn}
+        />
         <TravelAndDiscountForm selections={form.selections} onChange={form.updateSelection} />
         <PhotoUpload photos={form.photos} onAdd={form.addPhoto} onRemove={form.removePhoto} />
       </motion.div>

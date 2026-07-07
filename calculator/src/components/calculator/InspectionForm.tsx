@@ -1,8 +1,8 @@
 // Step 4 — Condition & Findings. Simplified to three plain dropdowns:
-// Exterior Condition is the only one that changes price (a flat surcharge
-// covering all forms of exterior contamination together); Interior and
-// Paint condition are technician notes only. Paint Condition only appears
-// when Paint Enhancement Detail is the selected service.
+// Exterior and Interior Condition each carry their own flat surcharge (one
+// bucket covering all forms of contamination on that side of the vehicle);
+// Paint Condition is a technician note only and appears solely when Paint
+// Enhancement Detail is the selected service.
 
 import { Sparkles } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
@@ -23,7 +23,7 @@ export function InspectionForm({ selections, onChange }: InspectionFormProps) {
     <GlassPanel className="p-6" delay={0.08}>
       <SectionHeading eyebrow="Step Four" title="Condition & Findings" icon={<Sparkles className="h-5 w-5" />} />
       <p className="mb-5 -mt-2 text-sm text-slate-400">
-        Exterior Condition adjusts price. Interior and Paint condition are technician notes only.
+        Exterior and Interior Condition each adjust price. Paint Condition is a technician note only.
       </p>
 
       <div className={`grid grid-cols-1 gap-4 ${showPaintCondition ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
@@ -39,7 +39,7 @@ export function InspectionForm({ selections, onChange }: InspectionFormProps) {
           value={selections.interiorConditionId}
           onChange={(v) => onChange('interiorConditionId', v as ConditionTierId)}
           options={pricingConfig.interiorConditions.map((c) => ({ value: c.id, label: c.label }))}
-          hint="Notes only — no price impact"
+          hint="Interior contamination — cleaning surcharge"
         />
         {showPaintCondition && (
           <SelectField

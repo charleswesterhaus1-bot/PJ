@@ -75,6 +75,9 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
         <Row label={`Exterior Condition — ${result.exteriorCondition.label}`} value={formatSignedCurrency(result.exteriorCondition.amount)} muted />
         {result.exteriorCondition.factors && result.exteriorCondition.factors.filter(Boolean).length > 0 && <Note text={result.exteriorCondition.factors.filter(Boolean).join(' · ')} />}
 
+        <Row label={`Interior Condition — ${result.interiorCondition.label}`} value={formatSignedCurrency(result.interiorCondition.amount)} muted />
+        {result.interiorCondition.factors && result.interiorCondition.factors.filter(Boolean).length > 0 && <Note text={result.interiorCondition.factors.filter(Boolean).join(' · ')} />}
+
         {result.addOnLineItems.length > 0 && (
           <div className="mt-2 border-t border-gray-100 pt-2">
             <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Premium Upgrades</p>

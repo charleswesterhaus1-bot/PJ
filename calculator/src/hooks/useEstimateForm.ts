@@ -28,14 +28,16 @@ function emptyVehicleInfo(): VehicleInfo {
     mileage: '',
     vin: '',
     licensePlate: '',
+    interiorMaterial: 'other',
     ppf: 'unknown',
     ceramicCoating: 'unknown',
     mattePaint: false,
-    vinylWrap: false,
     convertibleTop: false,
     carbonFiberExterior: false,
   }
 }
+
+const LEATHER_INTERIOR_MATERIALS = ['leather', 'leather-alcantara']
 
 export function useEstimateForm() {
   const [client, setClient] = useState<ClientDraft>(emptyClientDraft())
@@ -68,15 +70,23 @@ export function useEstimateForm() {
 
   // Drop any selected add-on that isn't valid for the currently selected
   // service (e.g. Iron Removal was picked, then the service changed to
-  // Paint Enhancement, which already includes it).
+  // Paint Enhancement, which already includes it) or that requires a
+  // leather interior the vehicle no longer has (e.g. Interior Material was
+  // changed to Alcantara after Leather Conditioning was already selected).
   useEffect(() => {
+    const hasLeatherInterior = LEATHER_INTERIOR_MATERIALS.includes(vehicle.interiorMaterial)
     setSelections((prev) => {
-      const addOn = pricingConfig.addOns
-      const validIds = prev.addOnIds.filter((id) => addOn.find((a) => a.id === id)?.availableForServiceIds.includes(prev.serviceId))
+      const validIds = prev.addOnIds.filter((id) => {
+        const addOn = pricingConfig.addOns.find((a) => a.id === id)
+        if (!addOn) return false
+        if (!addOn.availableForServiceIds.includes(prev.serviceId)) return false
+        if (addOn.requiresLeatherInterior && !hasLeatherInterior) return false
+        return true
+      })
       if (validIds.length === prev.addOnIds.length) return prev
       return { ...prev, addOnIds: validIds }
     })
-  }, [selections.serviceId])
+  }, [selections.serviceId, vehicle.interiorMaterial])
 
   const result = useMemo(() => calculateEstimate(selections), [selections])
 

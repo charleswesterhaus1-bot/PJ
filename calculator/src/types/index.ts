@@ -43,7 +43,9 @@ export interface ServiceOption {
 
 /** An optional upgrade with its own flat price and labor contribution.
  * Only offered on the primary services listed in `availableForServiceIds` —
- * hidden entirely when the selected service already includes it. */
+ * hidden entirely when the selected service already includes it.
+ * `requiresLeatherInterior` additionally hides it unless the vehicle's
+ * interior material actually includes leather (see Leather Conditioning). */
 export interface AddOnOption {
   id: string
   label: string
@@ -53,6 +55,7 @@ export interface AddOnOption {
   materialCost: number
   equipmentUsed: string[]
   availableForServiceIds: string[]
+  requiresLeatherInterior?: boolean
 }
 
 export type DiscountKind = 'military' | 'repeatClient' | 'referral' | 'portfolioVehicle' | 'custom'
@@ -118,18 +121,18 @@ export interface FeatureFlags {
 
 export type ConditionTierId = 'excellent' | 'light' | 'moderate' | 'heavy'
 
-/** Exterior Condition is the only condition tier that changes price — a flat
- * surcharge covering bugs, brake dust, road film, tar, tree sap, fallout, and
- * general contamination as a single bucket rather than itemized charges. */
-export interface ExteriorConditionTier {
+/** Exterior and Interior Condition each carry a flat surcharge — one bucket
+ * covering all forms of contamination on that side of the vehicle rather
+ * than itemized charges. */
+export interface PricedConditionTier {
   id: ConditionTierId
   label: string
   surcharge: number
   note: string
 }
 
-/** Interior and Paint condition are technician notes only — they never
- * change price, they just travel with the estimate for the tech's benefit. */
+/** Paint condition is a technician note only — it never changes price, it
+ * just travels with the estimate for the tech's benefit. */
 export interface NoteOnlyConditionTier {
   id: ConditionTierId
   label: string
@@ -147,8 +150,8 @@ export interface PricingConfig {
    * `multiplier` here scales labor hours and material cost only — price comes
    * directly from each service's per-class table. */
   vehicleTypes: (RateOption & { classification: VehicleClassificationRule })[]
-  exteriorConditions: ExteriorConditionTier[]
-  interiorConditions: NoteOnlyConditionTier[]
+  exteriorConditions: PricedConditionTier[]
+  interiorConditions: PricedConditionTier[]
   paintConditions: NoteOnlyConditionTier[]
   services: ServiceOption[]
   addOns: AddOnOption[]
@@ -183,6 +186,7 @@ export type ClientDraft = Omit<ClientRecord, 'id' | 'createdAt' | 'updatedAt'> &
 
 export type TriState = 'unknown' | 'yes' | 'no'
 export type PpfCoverage = 'none' | 'partial' | 'full' | 'unknown'
+export type InteriorMaterial = 'leather' | 'leather-alcantara' | 'alcantara' | 'other'
 
 export interface VehicleInfo {
   year: string
@@ -192,12 +196,14 @@ export interface VehicleInfo {
   mileage: string
   vin: string
   licensePlate: string
+  /** Drives whether the Leather Conditioning upgrade is offered at all —
+   * not just a note, an actual availability gate. */
+  interiorMaterial: InteriorMaterial
   /** Special surfaces/finishes that change handling but not price — see
    * utils/vehicleHandlingNotes.ts for the technician notes these generate. */
   ppf: PpfCoverage
   ceramicCoating: TriState
   mattePaint: boolean
-  vinylWrap: boolean
   convertibleTop: boolean
   carbonFiberExterior: boolean
 }
@@ -242,6 +248,7 @@ export interface EstimateResult {
   baseService: EstimateLineItem
   vehicleComplexity: EstimateLineItem
   exteriorCondition: EstimateLineItem
+  interiorCondition: EstimateLineItem
   addOnLineItems: EstimateLineItem[]
   addOnsTotal: number
   travelFee: number
