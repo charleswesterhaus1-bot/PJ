@@ -48,6 +48,7 @@ export function ServiceConditionForm({ selections, onChange }: ServiceConditionF
               </span>
             ))}
           </div>
+          {service.tagline && <p className="mt-3 text-xs italic text-[#E8CF83]/80">{service.tagline}</p>}
         </div>
       )}
     </GlassPanel>

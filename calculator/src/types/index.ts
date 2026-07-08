@@ -22,7 +22,7 @@ export interface VehicleClassificationRule {
   modelKeywords: string[]
 }
 
-export type VehicleClassId = 'sports-car' | 'supercar' | 'performance-truck' | 'hypercar'
+export type VehicleClassId = 'sports-car' | 'supercar' | 'luxury-suv-truck' | 'hypercar'
 
 /** A primary detailing service/package — the base line of an estimate.
  * Priced explicitly per vehicle class rather than a single base × multiplier,
@@ -33,6 +33,9 @@ export interface ServiceOption {
   /** What's included, shown as a bullet list — kept literal/plain so it reads
    * as a clear checklist rather than marketing copy. */
   includes: string[]
+  /** Optional one-line caption shown under the includes list, e.g. flagging
+   * a service as the top tier offered. */
+  tagline?: string
   basePriceByClass: Record<VehicleClassId, number>
   baseLaborHours: number
   /** Estimated product/material cost at the "Sports Car" baseline class — internal only. */

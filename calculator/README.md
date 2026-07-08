@@ -31,24 +31,26 @@ use day-to-day.
    coating/matte paint/convertible top/carbon fiber flags (these don't
    change price, but drive "Technician Notes" shown on the estimate). Make +
    Model auto-classify the vehicle into a **Vehicle Class** — Sports Car /
-   Supercar / Performance Truck / Hypercar (`src/utils/classifyVehicle.ts`)
+   Supercar / Luxury SUV & Truck / Hypercar (`src/utils/classifyVehicle.ts`)
    — every vehicle gets priced, there's no "unsupported" case. Vehicle Class
    doubles as the pricing dimension every service is keyed on and is always
    a dropdown-click away from override.
 3. **Primary Service** — one of four services (Interior Detail, Exterior
    Detail, Full Detail, Paint Enhancement Detail), each with its exact
-   "includes" checklist and the equipment used.
+   "includes" checklist and the equipment used. Paint Enhancement Detail
+   bundles Iron Removal, Clay Mitt Decontamination, and a one-step machine
+   polish directly into the package — those aren't separately purchasable
+   enhancements.
 4. **Condition & Findings** — three plain dropdowns. Exterior Condition and
-   Interior Condition each carry their own flat surcharge — one bucket
-   covering all forms of contamination on that side of the vehicle (bugs,
-   brake dust, road film, tar, tree sap, fallout, general soiling) rather
-   than itemized charges. Paint Condition (only shown when Paint Enhancement
-   Detail is selected) is a technician note only — it never changes price.
-5. **Premium Enhancements** — only the enhancements valid for the selected
-   service are shown; one already bundled into the package (e.g. Iron
-   Removal / Clay Mitt Decontamination on Paint Enhancement Detail) is
-   hidden rather than shown disabled, since it's redundant, not a choice.
-   Leather Conditioning is additionally hidden unless Interior Material
+   Interior Condition each carry their own flat surcharge, applied once per
+   side regardless of how many individual contamination types are present
+   (bugs, brake dust, road film, tar, tree sap, fallout, general soiling) —
+   never itemized, never stacked. Paint Condition (only shown when Paint
+   Enhancement Detail is selected) is a technician note only — it never
+   changes price.
+5. **Premium Enhancements** — every enhancement is available as an optional
+   checkbox on every service ("regardless of package"); the only exception
+   is Leather Conditioning, which is hidden unless Interior Material
    includes leather. Switching the service or the interior material
    automatically drops any selected enhancement that's no longer valid.
 6. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
@@ -88,12 +90,14 @@ condition tiers and the vehicle classification rules (inside each
 `vehicleTypes` entry) are similarly data-driven — add a tier or a new
 recognized nameplate/keyword without touching any component code.
 
-Premium Enhancements each carry an `availableForServiceIds` list — an
-enhancement is hidden entirely (not just disabled) on any service where
-it's already included, e.g. Iron Removal / Clay Mitt Decontamination on
-Paint Enhancement Detail, which already bundles both. Leather Conditioning
-additionally sets `requiresLeatherInterior: true`, gating it on
-`VehicleInfo.interiorMaterial`.
+Premium Enhancements each carry an `availableForServiceIds` list, currently
+set to all four services on every enhancement — they're meant to be
+optional checkboxes regardless of which package is selected. Iron Removal
+and Clay Mitt Decontamination aren't enhancements at all anymore; they're
+bundled directly into Paint Enhancement Detail's `includes` list. Leather
+Conditioning is the one enhancement with a real availability gate: it sets
+`requiresLeatherInterior: true`, hiding it unless `VehicleInfo.interiorMaterial`
+includes leather.
 
 A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 45% by default): each service's `baseLaborHours` was calibrated so the

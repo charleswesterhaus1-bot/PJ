@@ -1,5 +1,5 @@
 // Step 2 — vehicle identity. Make/Model drive automatic classification into
-// Sports Car / Supercar / Performance Truck / Hypercar; the result is
+// Sports Car / Supercar / Luxury SUV & Truck / Hypercar; the result is
 // shown as a badge with a manual override always available underneath.
 // Interior Material is the one field here that isn't just a note — it's an
 // actual availability gate for the Leather Conditioning upgrade. Special

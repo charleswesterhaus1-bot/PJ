@@ -1,4 +1,4 @@
-// Classifies a vehicle into Sports Car / Supercar / Performance Truck /
+// Classifies a vehicle into Sports Car / Supercar / Luxury SUV & Truck /
 // Hypercar from its Make + Model, using the rules in pricingConfig.vehicleTypes.
 // Every vehicle gets a class — there's no "unsupported" case — Sports Car is
 // the default fallback for anything unrecognized, since it's also the
@@ -9,8 +9,8 @@ import { pricingConfig } from '../config/pricingConfig'
 // Checked in this explicit order rather than array order — a model string
 // can contain more than one tier's keyword, and the rarer/more expensive
 // tier should win regardless of which keyword happens to match.
-const MODEL_KEYWORD_PRIORITY = ['hypercar', 'performance-truck', 'supercar']
-const MAKE_PRIORITY = ['hypercar', 'supercar']
+const MODEL_KEYWORD_PRIORITY = ['hypercar', 'luxury-suv-truck', 'supercar']
+const MAKE_PRIORITY = ['hypercar', 'luxury-suv-truck', 'supercar']
 
 export function classifyVehicle(make: string, model: string): string {
   const makeLower = make.trim().toLowerCase()
