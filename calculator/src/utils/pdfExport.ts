@@ -126,6 +126,9 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
   // Client + vehicle block
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = findLabel(selections.vehicleTypeId, pricingConfig.vehicleTypes)
+  const service = pricingConfig.services.find((s) => s.id === selections.serviceId)
+  const showExterior = service?.relevantConditions.includes('exterior') ?? true
+  const showInterior = service?.relevantConditions.includes('interior') ?? true
   if (client.name) bodyLine(client.name, { bold: true, size: 13, gap: 17 })
   if (vehicleLine) {
     bodyLine(
@@ -176,14 +179,15 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
   sectionLabel('Pricing')
   priceRow(`Base Service — ${result.baseService.label}`, formatCurrency(result.baseService.amount))
 
-  priceRow(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`, formatSignedCurrency(result.vehicleComplexity.amount), { muted: true })
-  if (result.vehicleComplexity.factors?.filter(Boolean).length) wrappedNote(result.vehicleComplexity.factors.filter(Boolean).join(' · '))
+  if (showExterior) {
+    priceRow(`Exterior Condition — ${result.exteriorCondition.label}`, formatSignedCurrency(result.exteriorCondition.amount), { muted: true })
+    if (result.exteriorCondition.factors?.filter(Boolean).length) wrappedNote(result.exteriorCondition.factors.filter(Boolean).join(' · '))
+  }
 
-  priceRow(`Exterior Condition — ${result.exteriorCondition.label}`, formatSignedCurrency(result.exteriorCondition.amount), { muted: true })
-  if (result.exteriorCondition.factors?.filter(Boolean).length) wrappedNote(result.exteriorCondition.factors.filter(Boolean).join(' · '))
-
-  priceRow(`Interior Condition — ${result.interiorCondition.label}`, formatSignedCurrency(result.interiorCondition.amount), { muted: true })
-  if (result.interiorCondition.factors?.filter(Boolean).length) wrappedNote(result.interiorCondition.factors.filter(Boolean).join(' · '))
+  if (showInterior) {
+    priceRow(`Interior Condition — ${result.interiorCondition.label}`, formatSignedCurrency(result.interiorCondition.amount), { muted: true })
+    if (result.interiorCondition.factors?.filter(Boolean).length) wrappedNote(result.interiorCondition.factors.filter(Boolean).join(' · '))
+  }
 
   if (result.addOnLineItems.length > 0) {
     y += 4

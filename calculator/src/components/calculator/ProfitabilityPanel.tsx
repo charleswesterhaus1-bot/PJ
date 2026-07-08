@@ -4,6 +4,7 @@
 
 import { Lock, Wrench, DollarSign, TrendingUp, TriangleAlert, Gauge, Car } from 'lucide-react'
 import { GlassPanel } from '../ui/GlassPanel'
+import { AnimatedNumber } from '../ui/AnimatedNumber'
 import { formatCurrency, formatHours } from '../../utils/format'
 import { pricingConfig } from '../../config/pricingConfig'
 import type { EstimateResult } from '../../types'
@@ -22,21 +23,32 @@ export function ProfitabilityPanel({ result }: { result: EstimateResult }) {
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em]">Business Summary — Never Printed</p>
       </div>
 
-      <div className="flex items-center justify-between border-b border-white/5 pb-3 text-sm text-slate-300">
-        <span className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between border-b border-white/5 pb-4 text-sm text-slate-300">
+        <span className="flex items-center gap-2">
           <Wrench className="h-3.5 w-3.5 text-[#C9A227]" />
           Estimated Labor Hours
         </span>
         <span className="font-semibold tabular-nums text-slate-100">{formatHours(result.laborHours)}</span>
       </div>
 
-      <div className="space-y-1.5 pt-4">
+      {/* Costs */}
+      <div className="space-y-2 pt-4">
         <Row label="Labor Cost" value={formatCurrency(result.laborCost)} />
         <Row label="Material Cost" value={formatCurrency(result.materialCost)} />
         <Row label="Travel Cost" value={formatCurrency(result.travelCost)} />
-        <Row label="Gross Profit" value={formatCurrency(result.grossProfit)} emphasis />
-        <div className="flex items-center justify-between pt-1.5">
-          <span className="flex items-center gap-1.5 text-sm text-slate-300">
+      </div>
+
+      {/* Results */}
+      <div className="mt-4 space-y-2 border-t border-white/5 pt-4">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2 text-sm text-slate-300">
+            <DollarSign className="h-3.5 w-3.5" />
+            Gross Profit
+          </span>
+          <AnimatedNumber value={result.grossProfit} format={formatCurrency} className="text-sm font-bold tabular-nums text-[#E8CF83]" />
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2 text-sm text-slate-300">
             <TrendingUp className="h-3.5 w-3.5" />
             Gross Margin
           </span>
@@ -45,7 +57,7 @@ export function ProfitabilityPanel({ result }: { result: EstimateResult }) {
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="flex items-center gap-1.5 text-sm text-slate-300">
+          <span className="flex items-center gap-2 text-sm text-slate-300">
             <Gauge className="h-3.5 w-3.5" />
             Revenue / Labor Hour
           </span>
@@ -71,14 +83,11 @@ export function ProfitabilityPanel({ result }: { result: EstimateResult }) {
   )
 }
 
-function Row({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between py-1">
-      <span className="flex items-center gap-1.5 text-sm text-slate-300">
-        {label === 'Gross Profit' && <DollarSign className="h-3.5 w-3.5" />}
-        {label}
-      </span>
-      <span className={`text-sm tabular-nums ${emphasis ? 'font-bold text-[#E8CF83]' : 'font-semibold text-slate-100'}`}>{value}</span>
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-slate-300">{label}</span>
+      <span className="text-sm font-semibold tabular-nums text-slate-100">{value}</span>
     </div>
   )
 }

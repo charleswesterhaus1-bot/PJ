@@ -32,16 +32,25 @@ export function ServiceConditionForm({ selections, onChange }: ServiceConditionF
 
       {service && (
         <div className="mt-4 rounded-lg border border-white/10 bg-white/[0.02] p-4">
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">{service.label} Includes</p>
-          <ul className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
-            {service.includes.map((item) => (
-              <li key={item} className="flex items-start gap-1.5 text-xs text-slate-400">
-                <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-[#C9A227]/70" />
-                {item}
-              </li>
+          <p className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-500">{service.label} Includes</p>
+          <div className="space-y-3.5">
+            {service.includes.map((group, index) => (
+              <div key={group.group || index}>
+                {group.group && (
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#E8CF83]/70">{group.group}</p>
+                )}
+                <ul className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
+                  {group.items.map((item) => (
+                    <li key={item} className="flex items-start gap-1.5 text-xs text-slate-400">
+                      <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-[#C9A227]/70" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          </div>
+          <div className="mt-3.5 flex flex-wrap gap-1.5">
             {service.equipmentUsed.map((eq) => (
               <span key={eq} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[10px] text-slate-500">
                 {eq}

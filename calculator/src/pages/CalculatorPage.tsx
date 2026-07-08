@@ -71,6 +71,7 @@ export function CalculatorPage({ prefillClient, onConsumePrefill }: CalculatorPa
       selections: form.selections,
       result: form.result,
       photos: form.photos,
+      status: 'pending',
     }
     const ok = saveEstimate(estimate)
     if (ok) {
@@ -120,6 +121,8 @@ export function CalculatorPage({ prefillClient, onConsumePrefill }: CalculatorPa
               address: record.address,
               notes: record.notes,
             })
+            const history = estimates.filter((e) => e.clientId === record.id)
+            if (history[0]) form.replaceVehicle(history[0].vehicle)
             setClientQuery('')
           }}
           clientHistory={clientHistory}

@@ -31,27 +31,30 @@ use day-to-day.
    coating/matte paint/convertible top/carbon fiber flags (these don't
    change price, but drive "Technician Notes" shown on the estimate). Make +
    Model auto-classify the vehicle into a **Vehicle Class** — Sports Car /
-   Supercar / Luxury SUV & Truck / Hypercar (`src/utils/classifyVehicle.ts`)
+   Supercar / SUV / Truck / Hypercar (`src/utils/classifyVehicle.ts`)
    — every vehicle gets priced, there's no "unsupported" case. Vehicle Class
    doubles as the pricing dimension every service is keyed on and is always
    a dropdown-click away from override.
 3. **Primary Service** — one of four services (Signature Interior Detail,
    Signature Exterior Detail, Signature Full Detail, Signature Paint
-   Enhancement), each with its exact "includes" checklist and the equipment
+   Enhancement), each with its exact "includes" checklist (grouped by
+   Interior/Exterior/Paint Enhancement for readability) and the equipment
    used. Signature Paint Enhancement bundles Iron Decontamination, Clay
    Mitt Decontamination, and a one-step machine polish directly into the
    package (explicitly a single-stage service, never marketed as "paint
    correction") — those aren't separately purchasable enhancements.
-4. **Condition & Findings** — five dropdowns. Exterior Condition and
-   Interior Condition each carry their own flat surcharge, applied once per
-   side regardless of how many individual contamination types are present
-   (bugs, brake dust, road film, tar, tree sap, fallout, general soiling) —
-   never itemized, never stacked; it exists purely to compensate for
-   additional labor. Paint, Wheels, and Engine Bay are technician-reference
-   categories only — no price impact — kept deliberately simple (one tier
-   each) so the inspection stays quick to fill out while still helping
-   decide which primary service and which Exterior/Interior Condition tier
-   fit.
+4. **Condition & Findings** — up to five dropdowns, but only the ones
+   relevant to the selected service are ever shown (`ServiceOption.relevantConditions`
+   in `pricingConfig.ts`) — e.g. Signature Interior Detail only shows Interior
+   Condition. Exterior Condition and Interior Condition each carry their own
+   flat surcharge, applied once per side regardless of how many individual
+   contamination types are present (bugs, brake dust, road film, tar, tree
+   sap, fallout, general soiling) — never itemized, never stacked, and never
+   charged for a side a service doesn't actually touch. Paint, Wheels, and
+   Engine Bay are technician-reference categories only — no price impact —
+   kept deliberately simple (one tier each) so the inspection stays quick to
+   fill out while still helping decide which primary service and which
+   Exterior/Interior Condition tier fit.
 5. **Premium Enhancements** — only four: Steam Cleaning, Leather
    Conditioning, Engine Bay Detail, and Pet Hair Removal. Every enhancement
    is available as an optional checkbox on every service ("regardless of
@@ -64,10 +67,10 @@ use day-to-day.
 6. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
    shots, compressed client-side and attached to the saved estimate).
 
-The right-hand column shows the client-facing estimate — itemized pricing
-with a "why" under every adjustment, labeled "Exotic Vehicle Handling &
-Protection" for the classification line — plus a separate, staff-only
-**Business Summary** (estimated labor hours, labor/material/travel cost,
+The right-hand column shows the client-facing estimate — the Base Service
+line already reflects the full, class-adjusted price for the vehicle being
+quoted, with a "why" under every condition-based adjustment — plus a
+separate, staff-only **Business Summary** (estimated labor hours, labor/material/travel cost,
 gross profit, gross margin, revenue per labor hour, and a margin warning
 below 45%). That panel is never part of print, PDF export, or the copied
 estimate text; see "Print & PDF" below for how that separation is enforced
@@ -86,19 +89,20 @@ src/config/pricingConfig.ts
 Services are priced per vehicle class explicitly (`basePriceByClass: {
 'sports-car', supercar, 'luxury-suv-truck', hypercar }` — the id stays
 `luxury-suv-truck` internally even though the label shown to staff is
-"Luxury SUV & Truck") rather than one number × a multiplier, since real class
+"SUV / Truck") rather than one number × a multiplier, since real class
 pricing isn't a clean ratio across every package — edit whichever class's
-number needs to change without touching the others. The cheapest class
-(Sports Car) is the pricing baseline; the "Exotic Vehicle Handling &
-Protection" line on the estimate is just the delta between that baseline
-and the selected class's price for the chosen service. A separate
-`multiplier` on each vehicle class scales labor hours and material cost
-only (never price) to reflect the extra time/care a pricier class actually
-takes. Edit any value and every screen updates automatically; no pricing is
-hardcoded anywhere else in the app. Exterior/Interior/Paint/Wheels/Engine
-Bay condition tiers and the vehicle classification rules (inside each
-`vehicleTypes` entry) are similarly data-driven — add a tier or a new
-recognized nameplate/keyword without touching any component code.
+number needs to change without touching the others. The Base Service line
+on the estimate always shows the full price for the selected class and
+service directly. A separate `multiplier` on each vehicle class scales
+labor hours and material cost only (never price) to reflect the extra
+time/care a pricier class actually takes. Edit any value and every screen
+updates automatically; no pricing is hardcoded anywhere else in the app.
+Exterior/Interior/Paint/Wheels/Engine Bay condition tiers and the vehicle
+classification rules (inside each `vehicleTypes` entry) are similarly
+data-driven — add a tier or a new recognized nameplate/keyword without
+touching any component code. Each service's `relevantConditions` list
+controls which of those five condition fields are shown and priced for
+that service.
 
 Premium Enhancements each carry an `availableForServiceIds` list, currently
 set to all four services on every enhancement — they're meant to be

@@ -2,8 +2,8 @@
 // current list plus add/delete actions, and keeps state in sync.
 
 import { useCallback, useEffect, useState } from 'react'
-import type { SavedEstimate } from '../types'
-import { addEstimate, deleteEstimate, loadEstimates } from '../utils/storage'
+import type { EstimateStatus, SavedEstimate } from '../types'
+import { addEstimate, deleteEstimate, loadEstimates, updateEstimate } from '../utils/storage'
 
 export function useSavedEstimates() {
   const [estimates, setEstimates] = useState<SavedEstimate[]>([])
@@ -22,5 +22,9 @@ export function useSavedEstimates() {
     setEstimates(deleteEstimate(id))
   }, [])
 
-  return { estimates, save, remove }
+  const setStatus = useCallback((id: string, status: EstimateStatus) => {
+    setEstimates(updateEstimate(id, { status }))
+  }, [])
+
+  return { estimates, save, remove, setStatus }
 }

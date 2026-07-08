@@ -20,6 +20,9 @@ interface PrintableEstimateProps {
 export function PrintableEstimate({ client, vehicle, selections, result, estimateNumber, createdAt }: PrintableEstimateProps) {
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
+  const service = pricingConfig.services.find((s) => s.id === selections.serviceId)
+  const showExterior = service?.relevantConditions.includes('exterior') ?? true
+  const showInterior = service?.relevantConditions.includes('interior') ?? true
   const technicianNotes = buildTechnicianNotes(vehicle, selections)
 
   return (
@@ -69,14 +72,19 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
 
         <Row label={`Base Service — ${result.baseService.label}`} value={formatCurrency(result.baseService.amount)} />
 
-        <Row label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} value={formatSignedCurrency(result.vehicleComplexity.amount)} muted />
-        {result.vehicleComplexity.factors && result.vehicleComplexity.factors.filter(Boolean).length > 0 && <Note text={result.vehicleComplexity.factors.filter(Boolean).join(' · ')} />}
+        {showExterior && (
+          <>
+            <Row label={`Exterior Condition — ${result.exteriorCondition.label}`} value={formatSignedCurrency(result.exteriorCondition.amount)} muted />
+            {result.exteriorCondition.factors && result.exteriorCondition.factors.filter(Boolean).length > 0 && <Note text={result.exteriorCondition.factors.filter(Boolean).join(' · ')} />}
+          </>
+        )}
 
-        <Row label={`Exterior Condition — ${result.exteriorCondition.label}`} value={formatSignedCurrency(result.exteriorCondition.amount)} muted />
-        {result.exteriorCondition.factors && result.exteriorCondition.factors.filter(Boolean).length > 0 && <Note text={result.exteriorCondition.factors.filter(Boolean).join(' · ')} />}
-
-        <Row label={`Interior Condition — ${result.interiorCondition.label}`} value={formatSignedCurrency(result.interiorCondition.amount)} muted />
-        {result.interiorCondition.factors && result.interiorCondition.factors.filter(Boolean).length > 0 && <Note text={result.interiorCondition.factors.filter(Boolean).join(' · ')} />}
+        {showInterior && (
+          <>
+            <Row label={`Interior Condition — ${result.interiorCondition.label}`} value={formatSignedCurrency(result.interiorCondition.amount)} muted />
+            {result.interiorCondition.factors && result.interiorCondition.factors.filter(Boolean).length > 0 && <Note text={result.interiorCondition.factors.filter(Boolean).join(' · ')} />}
+          </>
+        )}
 
         {result.addOnLineItems.length > 0 && (
           <div className="mt-2 border-t border-gray-100 pt-2">

@@ -10,8 +10,6 @@ function findById<T extends { id: string }>(items: T[], id: string): T | undefin
   return items.find((item) => item.id === id)
 }
 
-const BASELINE_CLASS: VehicleClassId = 'sports-car'
-
 export function calculateEstimate(selections: EstimateSelections): EstimateResult {
   const { vehicleTypes, exteriorConditions, interiorConditions, services, addOns, travel, discounts, labor } = pricingConfig
 
@@ -22,18 +20,16 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
 
   // Pricing is looked up per vehicle class directly (not a flat base ×
   // multiplier — real class pricing isn't a clean ratio across every
-  // package). "Sports Car" is the anchor shown as the Base Service line;
-  // the chosen class's dollar difference from that anchor is the "Exotic
-  // Vehicle Handling & Protection" line.
+  // package), so the Base Service line already reflects the full,
+  // class-adjusted price for the vehicle actually being quoted.
   const classId = vehicleClass.id as VehicleClassId
-  const basePrice = service.basePriceByClass[BASELINE_CLASS]
-  const afterClass = service.basePriceByClass[classId] ?? basePrice
-  const vehicleComplexityAmount = afterClass - basePrice
+  const afterClass = service.basePriceByClass[classId] ?? service.basePriceByClass['sports-car']
 
-  // Exterior and Interior Condition are each a flat surcharge — the same
-  // dollar amount regardless of vehicle class or selected service.
-  const exteriorSurcharge = exteriorCondition.surcharge
-  const interiorSurcharge = interiorCondition.surcharge
+  // Exterior and Interior Condition are each a flat surcharge — but only
+  // ever apply to a service that actually touches that side of the vehicle
+  // (e.g. Signature Interior Detail never charges for exterior contamination).
+  const exteriorSurcharge = service.relevantConditions.includes('exterior') ? exteriorCondition.surcharge : 0
+  const interiorSurcharge = service.relevantConditions.includes('interior') ? interiorCondition.surcharge : 0
 
   // Add-ons — only ones actually valid for the selected service are ever
   // passed in via selections.addOnIds (the UI hides/prunes the rest), but
@@ -96,8 +92,7 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
   const belowMarginWarning = marginPercent < labor.marginWarningThreshold
 
   return {
-    baseService: { label: service.label, amount: basePrice },
-    vehicleComplexity: { label: vehicleClass.label, amount: vehicleComplexityAmount, factors: vehicleClass.factors },
+    baseService: { label: service.label, amount: afterClass },
     exteriorCondition: { label: exteriorCondition.label, amount: exteriorSurcharge, factors: [exteriorCondition.note] },
     interiorCondition: { label: interiorCondition.label, amount: interiorSurcharge, factors: [interiorCondition.note] },
     addOnLineItems,

@@ -58,6 +58,12 @@ export function deleteEstimate(id: string): SavedEstimate[] {
   return updated
 }
 
+export function updateEstimate(id: string, patch: Partial<SavedEstimate>): SavedEstimate[] {
+  const updated = loadEstimates().map((e) => (e.id === id ? { ...e, ...patch } : e))
+  saveEstimates(updated)
+  return updated
+}
+
 // ── Clients ────────────────────────────────────────────────────────────
 
 export function loadClients(): ClientRecord[] {

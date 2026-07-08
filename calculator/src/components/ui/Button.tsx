@@ -23,9 +23,9 @@ const VARIANT_CLASSES: Record<Variant, string> = {
 export function Button({ variant = 'primary', icon, children, className = '', ...rest }: ButtonProps) {
   return (
     <motion.button
-      whileTap={{ scale: 0.97 }}
-      whileHover={{ scale: 1.015 }}
-      transition={{ duration: 0.15 }}
+      whileTap={{ scale: 0.97, y: 0 }}
+      whileHover={{ scale: 1.015, y: -1 }}
+      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
       className={`hh-focus-ring inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold tracking-wide transition-colors duration-200 disabled:pointer-events-none disabled:opacity-40 ${VARIANT_CLASSES[variant]} ${className}`}
       {...rest}
     >

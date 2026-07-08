@@ -26,7 +26,7 @@ export function TravelAndDiscountForm({ selections, onChange }: TravelAndDiscoun
           value={selections.travelMiles}
           onChange={(v) => onChange('travelMiles', v)}
           suffix="mi"
-          hint={`First ${travel.freeMiles} mi free, then ${formatCurrency(travel.pricePerMile)}/mi`}
+          hint={`First ${travel.freeMiles} miles included, then ${formatCurrency(travel.pricePerMile)}/mi`}
         />
       </GlassPanel>
 

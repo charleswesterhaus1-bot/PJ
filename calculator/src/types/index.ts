@@ -24,15 +24,29 @@ export interface VehicleClassificationRule {
 
 export type VehicleClassId = 'sports-car' | 'supercar' | 'luxury-suv-truck' | 'hypercar'
 
+/** Which Condition & Findings fields actually apply to a given service —
+ * drives both which dropdowns are shown in Step Four and which of the
+ * priced surcharges (exterior/interior) are ever applied. */
+export type ConditionCategory = 'exterior' | 'interior' | 'paint' | 'wheels' | 'engine'
+
+/** A named group of includes bullets, e.g. "Interior" / "Exterior" / "Paint
+ * Enhancement" — shown as a sub-header above its items. An empty `group`
+ * renders as a single flat list with no sub-header. */
+export interface ServiceIncludesGroup {
+  group: string
+  items: string[]
+}
+
 /** A primary detailing service/package — the base line of an estimate.
  * Priced explicitly per vehicle class rather than a single base × multiplier,
  * since real-world class pricing isn't a clean ratio across every package. */
 export interface ServiceOption {
   id: string
   label: string
-  /** What's included, shown as a bullet list — kept literal/plain so it reads
-   * as a clear checklist rather than marketing copy. */
-  includes: string[]
+  /** What's included, grouped for readability (see ServiceIncludesGroup) —
+   * kept literal/plain so it reads as a clear checklist rather than
+   * marketing copy. */
+  includes: ServiceIncludesGroup[]
   /** Optional one-line caption shown under the includes list, e.g. flagging
    * a service as the top tier offered. */
   tagline?: string
@@ -42,6 +56,9 @@ export interface ServiceOption {
   materialCost: number
   /** Equipment/products actually used, from our current inventory. */
   equipmentUsed: string[]
+  /** Which Condition & Findings categories this service actually touches —
+   * everything else is hidden from Step Four and never priced in. */
+  relevantConditions: ConditionCategory[]
 }
 
 /** An optional upgrade with its own flat price and labor contribution.
@@ -265,7 +282,6 @@ export interface EstimateLineItem {
 
 export interface EstimateResult {
   baseService: EstimateLineItem
-  vehicleComplexity: EstimateLineItem
   exteriorCondition: EstimateLineItem
   interiorCondition: EstimateLineItem
   addOnLineItems: EstimateLineItem[]
@@ -288,7 +304,10 @@ export interface EstimateResult {
   belowMarginWarning: boolean
 }
 
-/** A fully saved estimate, persisted to localStorage. */
+export type EstimateStatus = 'pending' | 'completed'
+
+/** A fully saved estimate, persisted to localStorage. Optional so existing
+ * records saved before this field existed still load without a migration. */
 export interface SavedEstimate {
   id: string
   estimateNumber: string
@@ -299,4 +318,5 @@ export interface SavedEstimate {
   selections: EstimateSelections
   result: EstimateResult
   photos: EstimatePhoto[]
+  status?: EstimateStatus
 }

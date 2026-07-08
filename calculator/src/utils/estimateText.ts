@@ -20,6 +20,9 @@ export function buildEstimateText(
   result: EstimateResult,
 ): string {
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
+  const service = pricingConfig.services.find((s) => s.id === selections.serviceId)
+  const showExterior = service?.relevantConditions.includes('exterior') ?? true
+  const showInterior = service?.relevantConditions.includes('interior') ?? true
 
   const lines: string[] = []
   lines.push(`${pricingConfig.company.name} — Estimate ${estimateNumber}`)
@@ -40,9 +43,8 @@ export function buildEstimateText(
   lines.push('')
   lines.push('— Pricing —')
   lines.push(`Base Service (${result.baseService.label}): ${formatCurrency(result.baseService.amount)}`)
-  lines.push(`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}: ${formatSignedCurrency(result.vehicleComplexity.amount)}`)
-  lines.push(`Exterior Condition — ${result.exteriorCondition.label}: ${formatSignedCurrency(result.exteriorCondition.amount)}`)
-  lines.push(`Interior Condition — ${result.interiorCondition.label}: ${formatSignedCurrency(result.interiorCondition.amount)}`)
+  if (showExterior) lines.push(`Exterior Condition — ${result.exteriorCondition.label}: ${formatSignedCurrency(result.exteriorCondition.amount)}`)
+  if (showInterior) lines.push(`Interior Condition — ${result.interiorCondition.label}: ${formatSignedCurrency(result.interiorCondition.amount)}`)
   if (result.addOnLineItems.length) {
     lines.push('Premium Enhancements:')
     result.addOnLineItems.forEach((item) => {

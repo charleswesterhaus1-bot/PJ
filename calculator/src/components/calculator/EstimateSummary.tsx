@@ -40,6 +40,9 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
   const vehicleLine = [vehicle.year, vehicle.make, vehicle.model].filter(Boolean).join(' ')
   const vehicleTypeLabel = pricingConfig.vehicleTypes.find((t) => t.id === selections.vehicleTypeId)?.label
+  const service = pricingConfig.services.find((s) => s.id === selections.serviceId)
+  const showExterior = service?.relevantConditions.includes('exterior') ?? true
+  const showInterior = service?.relevantConditions.includes('interior') ?? true
   const technicianNotes = buildTechnicianNotes(vehicle, selections)
 
   async function handleCopy() {
@@ -110,16 +113,16 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
         )}
 
         {/* Total */}
-        <div className="relative px-6 py-6 text-center">
+        <div className="relative px-6 py-9 text-center">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C9A227]/15 blur-3xl"
+            className="pointer-events-none absolute left-1/2 top-1/2 h-36 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#C9A227]/15 blur-3xl"
           />
-          <p className="relative text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Estimated Total</p>
+          <p className="relative text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-500">Estimated Total</p>
           <AnimatedNumber
             value={result.total}
             format={formatCurrency}
-            className="hh-gold-text relative block font-serif text-5xl font-bold tracking-tight"
+            className="hh-gold-text relative mt-2 block font-serif text-6xl font-bold tracking-tight"
           />
         </div>
 
@@ -129,11 +132,13 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
         <div className="px-6 py-4">
           <StatRow label={`Base Service — ${result.baseService.label}`} value={formatCurrency(result.baseService.amount)} />
 
-          <ExplainedRow label={`Exotic Vehicle Handling & Protection — ${result.vehicleComplexity.label}`} amount={result.vehicleComplexity.amount} factors={result.vehicleComplexity.factors} />
+          {showExterior && (
+            <ExplainedRow label={`Exterior Condition — ${result.exteriorCondition.label}`} amount={result.exteriorCondition.amount} factors={result.exteriorCondition.factors} />
+          )}
 
-          <ExplainedRow label={`Exterior Condition — ${result.exteriorCondition.label}`} amount={result.exteriorCondition.amount} factors={result.exteriorCondition.factors} />
-
-          <ExplainedRow label={`Interior Condition — ${result.interiorCondition.label}`} amount={result.interiorCondition.amount} factors={result.interiorCondition.factors} />
+          {showInterior && (
+            <ExplainedRow label={`Interior Condition — ${result.interiorCondition.label}`} amount={result.interiorCondition.amount} factors={result.interiorCondition.factors} />
+          )}
 
           {result.addOnLineItems.length > 0 && (
             <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
