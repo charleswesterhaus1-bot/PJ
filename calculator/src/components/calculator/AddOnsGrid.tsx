@@ -1,9 +1,9 @@
-// Premium Upgrades grid. Only upgrades valid for the currently selected
-// service are shown — one already bundled into the selected package (e.g.
-// Iron Removal / Clay Mitt on Paint Enhancement) is hidden rather than
-// shown disabled, since it's redundant, not a choice. Leather Conditioning
-// is additionally hidden unless the vehicle's interior material includes
-// leather.
+// Premium Enhancements grid. Only enhancements valid for the currently
+// selected service are shown — one already bundled into the selected
+// package (e.g. Iron Removal / Clay Mitt on Paint Enhancement Detail) is
+// hidden rather than shown disabled, since it's redundant, not a choice.
+// Leather Conditioning is additionally hidden unless the vehicle's interior
+// material includes leather.
 
 import { Sparkles } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -31,10 +31,10 @@ export function AddOnsGrid({ serviceId, interiorMaterial, selectedIds, onToggle 
 
   return (
     <GlassPanel className="p-6" delay={0.14}>
-      <SectionHeading eyebrow="Step Five" title="Premium Upgrades" icon={<Sparkles className="h-5 w-5" />} />
+      <SectionHeading eyebrow="Step Five" title="Premium Enhancements" icon={<Sparkles className="h-5 w-5" />} />
 
       {available.length === 0 ? (
-        <p className="text-sm text-slate-500">Every upgrade for this service is already included.</p>
+        <p className="text-sm text-slate-500">Every enhancement for this service is already included.</p>
       ) : (
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {available.map((addOn, index) => (

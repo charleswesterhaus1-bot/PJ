@@ -1,5 +1,5 @@
 // Custom checkbox styled as a gold-accented luxury toggle chip, used for the
-// Premium Upgrades. Shows the price and a short "what's included" caption.
+// Premium Enhancements. Shows the price and a short "what's included" caption.
 
 import { Check } from 'lucide-react'
 import { motion } from 'framer-motion'

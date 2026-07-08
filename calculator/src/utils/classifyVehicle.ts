@@ -15,10 +15,15 @@ const MAKE_PRIORITY = ['hypercar', 'supercar']
 export function classifyVehicle(make: string, model: string): string {
   const makeLower = make.trim().toLowerCase()
   const modelLower = model.trim().toLowerCase()
+  // Some nameplates (e.g. "Mercedes-AMG GT") naturally split across the
+  // Make and Model fields when typed separately — check keywords against
+  // the combined string so a match isn't missed just because it straddles
+  // both fields.
+  const combined = `${makeLower} ${modelLower}`.trim()
 
   for (const tierId of MODEL_KEYWORD_PRIORITY) {
     const type = pricingConfig.vehicleTypes.find((t) => t.id === tierId)
-    if (type?.classification.modelKeywords.some((kw) => modelLower.includes(kw))) {
+    if (type?.classification.modelKeywords.some((kw) => combined.includes(kw))) {
       return type.id
     }
   }

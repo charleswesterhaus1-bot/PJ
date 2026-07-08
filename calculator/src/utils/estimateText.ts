@@ -44,7 +44,7 @@ export function buildEstimateText(
   lines.push(`Exterior Condition — ${result.exteriorCondition.label}: ${formatSignedCurrency(result.exteriorCondition.amount)}`)
   lines.push(`Interior Condition — ${result.interiorCondition.label}: ${formatSignedCurrency(result.interiorCondition.amount)}`)
   if (result.addOnLineItems.length) {
-    lines.push('Premium Upgrades:')
+    lines.push('Premium Enhancements:')
     result.addOnLineItems.forEach((item) => {
       lines.push(`  • ${item.label}: ${formatCurrency(item.amount)}`)
     })

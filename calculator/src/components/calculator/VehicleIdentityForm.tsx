@@ -94,7 +94,7 @@ export function VehicleIdentityForm({ vehicle, onChange, classification, vehicle
             options={INTERIOR_MATERIAL_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
           />
         </div>
-        <p className="mt-2 text-xs text-slate-500">Determines whether Leather Conditioning is offered as a Premium Upgrade.</p>
+        <p className="mt-2 text-xs text-slate-500">Determines whether Leather Conditioning is offered as a Premium Enhancement.</p>
       </div>
 
       <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.02] p-4">

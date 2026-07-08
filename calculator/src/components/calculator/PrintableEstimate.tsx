@@ -80,7 +80,7 @@ export function PrintableEstimate({ client, vehicle, selections, result, estimat
 
         {result.addOnLineItems.length > 0 && (
           <div className="mt-2 border-t border-gray-100 pt-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Premium Upgrades</p>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">Premium Enhancements</p>
             {result.addOnLineItems.map((item) => (
               <Row key={item.label} label={item.label} value={formatCurrency(item.amount)} muted />
             ))}

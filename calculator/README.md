@@ -44,13 +44,13 @@ use day-to-day.
    brake dust, road film, tar, tree sap, fallout, general soiling) rather
    than itemized charges. Paint Condition (only shown when Paint Enhancement
    Detail is selected) is a technician note only — it never changes price.
-5. **Premium Upgrades** — only the upgrades valid for the selected service
-   are shown; one already bundled into the package (e.g. Iron Removal / Clay
-   Mitt Decontamination on Paint Enhancement Detail) is hidden rather than
-   shown disabled, since it's redundant, not a choice. Leather Conditioning
-   is additionally hidden unless Interior Material includes leather.
-   Switching the service or the interior material automatically drops any
-   selected upgrade that's no longer valid.
+5. **Premium Enhancements** — only the enhancements valid for the selected
+   service are shown; one already bundled into the package (e.g. Iron
+   Removal / Clay Mitt Decontamination on Paint Enhancement Detail) is
+   hidden rather than shown disabled, since it's redundant, not a choice.
+   Leather Conditioning is additionally hidden unless Interior Material
+   includes leather. Switching the service or the interior material
+   automatically drops any selected enhancement that's no longer valid.
 6. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
    shots, compressed client-side and attached to the saved estimate).
 
@@ -88,11 +88,12 @@ condition tiers and the vehicle classification rules (inside each
 `vehicleTypes` entry) are similarly data-driven — add a tier or a new
 recognized nameplate/keyword without touching any component code.
 
-Premium Upgrades each carry an `availableForServiceIds` list — an upgrade is
-hidden entirely (not just disabled) on any service where it's already
-included, e.g. Iron Removal / Clay Mitt Decontamination on Paint Enhancement
-Detail, which already bundles both. Leather Conditioning additionally sets
-`requiresLeatherInterior: true`, gating it on `VehicleInfo.interiorMaterial`.
+Premium Enhancements each carry an `availableForServiceIds` list — an
+enhancement is hidden entirely (not just disabled) on any service where
+it's already included, e.g. Iron Removal / Clay Mitt Decontamination on
+Paint Enhancement Detail, which already bundles both. Leather Conditioning
+additionally sets `requiresLeatherInterior: true`, gating it on
+`VehicleInfo.interiorMaterial`.
 
 A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 45% by default): each service's `baseLaborHours` was calibrated so the

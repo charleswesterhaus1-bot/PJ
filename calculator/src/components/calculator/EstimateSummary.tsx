@@ -137,7 +137,7 @@ export function EstimateSummary({ client, vehicle, selections, result, estimateN
 
           {result.addOnLineItems.length > 0 && (
             <div className="mt-2 space-y-1 border-t border-white/5 pt-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Premium Upgrades</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Premium Enhancements</p>
               {result.addOnLineItems.map((item) => (
                 <StatRow key={item.label} label={item.label} value={formatCurrency(item.amount)} muted />
               ))}

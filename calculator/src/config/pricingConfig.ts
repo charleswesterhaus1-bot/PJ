@@ -54,16 +54,16 @@ export const pricingConfig: PricingConfig = {
       factors: ['Low ground clearance, wide-body fitment, and exotic materials require specialized handling and product care'],
       classification: {
         makes: ['ferrari', 'lamborghini', 'mclaren', 'lotus', 'aston martin', 'bentley', 'rolls-royce', 'rolls royce'],
-        modelKeywords: ['gt3', 'turbo s', '911 gt', 'gt2', 'r8', 'z06', 'zr1', 'gt-r', 'gtr', 'amg gt'],
+        modelKeywords: ['gt3', '911 turbo', '911 gt', 'gt2', 'r8', 'z06', 'zr1', 'gt-r', 'gtr', 'amg gt'],
       },
     },
     {
       id: 'performance-truck',
       label: 'Performance Truck',
       multiplier: 1.22,
-      description: 'Raptor R, TRX, and other high-performance trucks',
+      description: 'Raptor, Raptor R, TRX, Shelby F-150, Hummer EV Pickup, and other high-performance trucks',
       factors: ['Larger surface area combined with aggressive performance trim requires additional attention'],
-      classification: { makes: [], modelKeywords: ['raptor r', 'raptor', 'trx'] },
+      classification: { makes: [], modelKeywords: ['raptor r', 'raptor', 'trx', 'shelby f-150', 'hummer ev'] },
     },
     {
       id: 'hypercar',
@@ -73,7 +73,7 @@ export const pricingConfig: PricingConfig = {
       factors: ['Extreme rarity, bespoke materials, and irreplaceable parts require our most careful, deliberate handling'],
       classification: {
         makes: ['bugatti', 'koenigsegg', 'pagani', 'rimac', 'czinger'],
-        modelKeywords: ['chiron', 'divo', 'veneno', 'sian', 'revuelto', 'laferrari', 'sf90 xx', 'senna', 'p1', 'speedtail', '918 spyder', 'valkyrie', 'regera', 'huayra'],
+        modelKeywords: ['chiron', 'tourbillon', 'divo', 'veneno', 'sian', 'laferrari', 'sf90 xx', 'senna', 'p1', 'speedtail', '918 spyder', 'valkyrie', 'regera', 'jesko', 'nevera', 'huayra', 'utopia', 'amg one'],
       },
     },
   ],
@@ -109,7 +109,6 @@ export const pricingConfig: PricingConfig = {
       label: 'Interior Detail',
       includes: [
         'Complete vacuum',
-        'Steam cleaning where appropriate',
         'Dash cleaning',
         'Center console cleaning',
         'Door panels',
@@ -119,15 +118,14 @@ export const pricingConfig: PricingConfig = {
         'Buttons and switches',
         'Plastic and vinyl cleaning with P&S Xpress',
         'Leather cleaning',
-        'Leather conditioning with Leather Honey',
         'Interior glass',
         'Detail brush work',
         'Final microfiber wipe',
       ],
-      basePriceByClass: { 'sports-car': 225, supercar: 250, 'performance-truck': 295, hypercar: 325 },
+      basePriceByClass: { 'sports-car': 225, supercar: 250, 'performance-truck': 285, hypercar: 325 },
       baseLaborHours: 1.1,
       materialCost: 14,
-      equipmentUsed: ['P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'McCulloch Steam Cleaner', 'Ridgid Shop Vac with Attachments', 'Detail Brushes', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels'],
+      equipmentUsed: ['P&S Xpress Interior Cleaner', 'Ridgid Shop Vac with Attachments', 'Detail Brushes', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels'],
     },
     {
       id: 'exterior-detail',
@@ -140,7 +138,7 @@ export const pricingConfig: PricingConfig = {
         'Wheel barrels cleaned where accessible',
         'Tires cleaned',
         'Lug nuts detailed',
-        'Detail brush work around badges, grilles, trim, and fuel door',
+        'Detail brush work around trim, grilles, emblems, and fuel door',
         'Door jamb wipe down',
         'Final rinse',
         'Premium towel dry',
@@ -148,7 +146,7 @@ export const pricingConfig: PricingConfig = {
         'Exterior trim dressing with CARPRO PERL',
         'Exterior glass',
       ],
-      basePriceByClass: { 'sports-car': 150, supercar: 175, 'performance-truck': 200, hypercar: 225 },
+      basePriceByClass: { 'sports-car': 150, supercar: 175, 'performance-truck': 190, hypercar: 225 },
       baseLaborHours: 0.7,
       materialCost: 12,
       equipmentUsed: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels', 'Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes'],
@@ -157,13 +155,13 @@ export const pricingConfig: PricingConfig = {
       id: 'full-detail',
       label: 'Full Detail',
       includes: ['Everything in Interior Detail', 'Everything in Exterior Detail'],
-      basePriceByClass: { 'sports-car': 340, supercar: 375, 'performance-truck': 400, hypercar: 435 },
+      basePriceByClass: { 'sports-car': 340, supercar: 375, 'performance-truck': 390, hypercar: 435 },
       baseLaborHours: 1.65,
       materialCost: 24,
       equipmentUsed: [
         'Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels',
         'Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes',
-        'P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'McCulloch Steam Cleaner', 'Ridgid Shop Vac with Attachments', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels',
+        'P&S Xpress Interior Cleaner', 'Ridgid Shop Vac with Attachments', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels',
       ],
     },
     {
@@ -177,32 +175,32 @@ export const pricingConfig: PricingConfig = {
         '3D One compound/polish',
         'Lake Country pads',
         'Increased gloss',
-        'Light swirl reduction',
         'Improved paint clarity',
+        'Light swirl reduction',
       ],
-      basePriceByClass: { 'sports-car': 500, supercar: 550, 'performance-truck': 600, hypercar: 650 },
+      basePriceByClass: { 'sports-car': 500, supercar: 550, 'performance-truck': 590, hypercar: 650 },
       baseLaborHours: 2.35,
       materialCost: 40,
       equipmentUsed: [
         'Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels',
         'Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes',
-        'P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'McCulloch Steam Cleaner', 'Ridgid Shop Vac with Attachments', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels',
+        'P&S Xpress Interior Cleaner', 'Ridgid Shop Vac with Attachments', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels',
         "Meguiar's Ultimate Iron Remover", 'Nanoskin Clay Mitt', 'Maxshine Dual Action Polisher', 'Lake Country Pads', '3D One Compound/Polish',
       ],
     },
   ],
 
-  // ── Premium Upgrades ─────────────────────────────────────────────────
-  // `availableForServiceIds` hides an upgrade entirely on any service where
-  // it's already included (e.g. Iron Removal / Clay Mitt on Paint
-  // Enhancement) rather than showing it as a redundant, disabled option.
-  // Leather Conditioning additionally requires a leather-containing interior
-  // (`requiresLeatherInterior`) — see VehicleInfo.interiorMaterial.
+  // ── Premium Enhancements ─────────────────────────────────────────────
+  // `availableForServiceIds` hides an enhancement entirely on any service
+  // where it's already included (e.g. Iron Removal / Clay Mitt on Paint
+  // Enhancement Detail) rather than showing it as a redundant, disabled
+  // option. Leather Conditioning additionally requires a leather-containing
+  // interior (`requiresLeatherInterior`) — see VehicleInfo.interiorMaterial.
   addOns: [
     {
       id: 'engine-bay',
       label: 'Engine Bay Detail',
-      includes: ['Safe rinse where appropriate', 'Gentle cleaning', 'Detail brush work', 'Drying', 'CARPRO PERL dressing'],
+      includes: ['Safe rinse when appropriate', 'Gentle cleaning', 'Detail brushes', 'Drying', 'CARPRO PERL dressing'],
       price: 75,
       laborHours: 0.35,
       materialCost: 8,
@@ -212,7 +210,7 @@ export const pricingConfig: PricingConfig = {
     {
       id: 'steam-interior',
       label: 'Steam Interior Treatment',
-      includes: ['Steam cleaning of hard surfaces', 'Vents', 'Cup holders', 'Buttons', 'Door handles', 'High-touch sanitization'],
+      includes: ['Steam cleaning of vents', 'Cup holders', 'Buttons', 'Door handles', 'High-touch hard surfaces'],
       price: 40,
       laborHours: 0.15,
       materialCost: 6,

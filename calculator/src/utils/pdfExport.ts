@@ -187,7 +187,7 @@ export async function exportEstimateToPdf(params: ExportParams, filename: string
 
   if (result.addOnLineItems.length > 0) {
     y += 4
-    sectionLabel('Premium Upgrades')
+    sectionLabel('Premium Enhancements')
     for (const item of result.addOnLineItems) {
       priceRow(item.label, formatCurrency(item.amount), { muted: true })
     }
