@@ -31,8 +31,8 @@ use day-to-day.
    coating/matte paint/convertible top/carbon fiber flags (these don't
    change price, but drive "Technician Notes" shown on the estimate). Make +
    Model auto-classify the vehicle into a **Vehicle Class** — Sports Car /
-   Supercar / Truck / SUV / Hypercar (`src/utils/classifyVehicle.ts`) —
-   every vehicle gets priced, there's no "unsupported" case. Vehicle Class
+   Supercar / Luxury SUV & Truck / Hypercar (`src/utils/classifyVehicle.ts`)
+   — every vehicle gets priced, there's no "unsupported" case. Vehicle Class
    doubles as the pricing dimension every service is keyed on and is always
    a dropdown-click away from override.
 3. **Primary Service** — one of four services (Signature Interior Detail,
@@ -52,11 +52,15 @@ use day-to-day.
    each) so the inspection stays quick to fill out while still helping
    decide which primary service and which Exterior/Interior Condition tier
    fit.
-5. **Premium Enhancements** — every enhancement is available as an optional
-   checkbox on every service ("regardless of package"); the only exception
-   is Leather Conditioning, which is hidden unless Interior Material
-   includes leather. Switching the service or the interior material
-   automatically drops any selected enhancement that's no longer valid.
+5. **Premium Enhancements** — only four: Steam Cleaning, Leather
+   Conditioning, Engine Bay Detail, and Pet Hair Removal. Every enhancement
+   is available as an optional checkbox on every service ("regardless of
+   package"); the only exception is Leather Conditioning, which is hidden
+   unless Interior Material includes leather. Pet Hair Removal is a
+   "starting at" price — checking it reveals an inline field so the
+   technician can add a severity surcharge on the spot. Switching the
+   service or the interior material automatically drops any selected
+   enhancement (and its surcharge) that's no longer valid.
 6. **Travel**, **Discount**, **Photo Documentation** (before/after/damage
    shots, compressed client-side and attached to the saved estimate).
 
@@ -82,7 +86,7 @@ src/config/pricingConfig.ts
 Services are priced per vehicle class explicitly (`basePriceByClass: {
 'sports-car', supercar, 'luxury-suv-truck', hypercar }` — the id stays
 `luxury-suv-truck` internally even though the label shown to staff is
-"Truck / SUV") rather than one number × a multiplier, since real class
+"Luxury SUV & Truck") rather than one number × a multiplier, since real class
 pricing isn't a clean ratio across every package — edit whichever class's
 number needs to change without touching the others. The cheapest class
 (Sports Car) is the pricing baseline; the "Exotic Vehicle Handling &
@@ -103,10 +107,14 @@ Decontamination and Clay Mitt Decontamination aren't enhancements at all
 anymore; they're bundled directly into Signature Paint Enhancement's
 `includes` list. Leather Conditioning is the one enhancement with a real
 availability gate: it sets `requiresLeatherInterior: true`, hiding it unless
-`VehicleInfo.interiorMaterial` includes leather. Every enhancement's
-`equipmentUsed` is drawn from the `equipment` list at the top of the same
-file — nothing is ever offered that requires equipment we don't actually
-own.
+`VehicleInfo.interiorMaterial` includes leather. Pet Hair Removal sets
+`allowManualSurcharge: true`, which is what tells `AddOnsGrid` to render the
+inline "Severity Surcharge" field once it's checked — `addOn.price` is
+always charged, and `EstimateSelections.addOnSurcharges[id]` adds pure
+revenue on top with no extra modeled labor/material cost. Every
+enhancement's `equipmentUsed` is drawn from the `equipment` list at the top
+of the same file — nothing is ever offered that requires equipment we
+don't actually own.
 
 A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 45% by default): each service's `baseLaborHours` was calibrated so the

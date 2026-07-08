@@ -138,7 +138,9 @@ export function CalculatorPage({ prefillClient, onConsumePrefill }: CalculatorPa
           serviceId={form.selections.serviceId}
           interiorMaterial={form.vehicle.interiorMaterial}
           selectedIds={form.selections.addOnIds}
+          addOnSurcharges={form.selections.addOnSurcharges}
           onToggle={form.toggleAddOn}
+          onSurchargeChange={form.updateAddOnSurcharge}
         />
         <TravelAndDiscountForm selections={form.selections} onChange={form.updateSelection} />
         <PhotoUpload photos={form.photos} onAdd={form.addPhoto} onRemove={form.removePhoto} />

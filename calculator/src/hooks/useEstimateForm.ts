@@ -84,7 +84,10 @@ export function useEstimateForm() {
         return true
       })
       if (validIds.length === prev.addOnIds.length) return prev
-      return { ...prev, addOnIds: validIds }
+      const droppedIds = prev.addOnIds.filter((id) => !validIds.includes(id))
+      const addOnSurcharges = { ...prev.addOnSurcharges }
+      droppedIds.forEach((id) => delete addOnSurcharges[id])
+      return { ...prev, addOnIds: validIds, addOnSurcharges }
     })
   }, [selections.serviceId, vehicle.interiorMaterial])
 
@@ -111,10 +114,20 @@ export function useEstimateForm() {
   }
 
   function toggleAddOn(id: string) {
-    setSelections((prev) => ({
-      ...prev,
-      addOnIds: prev.addOnIds.includes(id) ? prev.addOnIds.filter((a) => a !== id) : [...prev.addOnIds, id],
-    }))
+    setSelections((prev) => {
+      const isSelected = prev.addOnIds.includes(id)
+      const addOnSurcharges = { ...prev.addOnSurcharges }
+      if (isSelected) delete addOnSurcharges[id]
+      return {
+        ...prev,
+        addOnIds: isSelected ? prev.addOnIds.filter((a) => a !== id) : [...prev.addOnIds, id],
+        addOnSurcharges,
+      }
+    })
+  }
+
+  function updateAddOnSurcharge(id: string, amount: number) {
+    setSelections((prev) => ({ ...prev, addOnSurcharges: { ...prev.addOnSurcharges, [id]: Math.max(0, amount) } }))
   }
 
   function addPhoto(photo: EstimatePhoto) {
@@ -150,6 +163,7 @@ export function useEstimateForm() {
     replaceVehicle,
     updateSelection,
     toggleAddOn,
+    updateAddOnSurcharge,
     addPhoto,
     removePhoto,
     reset,

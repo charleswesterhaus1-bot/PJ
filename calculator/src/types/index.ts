@@ -48,7 +48,11 @@ export interface ServiceOption {
  * Only offered on the primary services listed in `availableForServiceIds` —
  * hidden entirely when the selected service already includes it.
  * `requiresLeatherInterior` additionally hides it unless the vehicle's
- * interior material actually includes leather (see Leather Conditioning). */
+ * interior material actually includes leather (see Leather Conditioning).
+ * `allowManualSurcharge` marks a "starting at" price the technician can add
+ * to on the spot for severity (currently just Pet Hair Removal) — the base
+ * `price` is always charged, and any surcharge entered on top is pure
+ * additional revenue with no extra modeled labor/material cost. */
 export interface AddOnOption {
   id: string
   label: string
@@ -59,6 +63,7 @@ export interface AddOnOption {
   equipmentUsed: string[]
   availableForServiceIds: string[]
   requiresLeatherInterior?: boolean
+  allowManualSurcharge?: boolean
 }
 
 export type DiscountKind = 'military' | 'repeatClient' | 'referral' | 'portfolioVehicle' | 'custom'
@@ -244,6 +249,9 @@ export interface EstimateSelections {
   wheelConditionId: ConditionTierId
   engineBayConditionId: ConditionTierId
   addOnIds: string[]
+  /** Manual per-severity surcharge on top of an add-on's base price, keyed
+   * by add-on id — only meaningful for add-ons with `allowManualSurcharge`. */
+  addOnSurcharges: Record<string, number>
   travelMiles: number
   discountId: DiscountKind | 'none'
   customDiscountPercent: number

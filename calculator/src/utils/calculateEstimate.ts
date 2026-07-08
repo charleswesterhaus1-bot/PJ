@@ -42,8 +42,15 @@ export function calculateEstimate(selections: EstimateSelections): EstimateResul
     .map((id) => findById(addOns, id))
     .filter((a): a is NonNullable<typeof a> => Boolean(a) && Boolean(a?.availableForServiceIds.includes(selections.serviceId)))
 
-  const addOnLineItems = selectedAddOns.map((addOn) => ({ label: addOn.label, amount: addOn.price }))
-  const addOnsTotal = selectedAddOns.reduce((sum, addOn) => sum + addOn.price, 0)
+  // A handful of add-ons (currently just Pet Hair Removal) are a "starting
+  // at" price the technician can add to on the spot for severity — that
+  // surcharge is pure additional revenue with no extra modeled labor/
+  // material cost, same as the Exterior/Interior Condition surcharges.
+  const addOnAmount = (addOn: (typeof selectedAddOns)[number]) =>
+    addOn.price + (addOn.allowManualSurcharge ? Math.max(0, selections.addOnSurcharges[addOn.id] ?? 0) : 0)
+
+  const addOnLineItems = selectedAddOns.map((addOn) => ({ label: addOn.label, amount: addOnAmount(addOn) }))
+  const addOnsTotal = selectedAddOns.reduce((sum, addOn) => sum + addOnAmount(addOn), 0)
 
   // Travel
   const billableMiles = Math.max(0, selections.travelMiles - travel.freeMiles)
@@ -122,6 +129,7 @@ export function defaultSelections(): EstimateSelections {
     wheelConditionId: 'excellent',
     engineBayConditionId: 'excellent',
     addOnIds: [],
+    addOnSurcharges: {},
     travelMiles: 0,
     discountId: 'none',
     customDiscountPercent: 0,

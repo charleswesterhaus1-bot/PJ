@@ -3,15 +3,15 @@
 // namespaced under a single prefix so it never collides with anything else
 // on the domain.
 //
-// Storage keys are versioned (`-v6`) because the estimate shape changed
-// again when Wheels/Engine Bay condition tiers were added and the
-// enhancement list was trimmed. Bumping the suffix again in the future is
-// the intended way to migrate a breaking shape change without writing a
-// migration script for a browser-only data store.
+// Storage keys are versioned (`-v7`) because the estimate shape changed
+// again when the enhancement list was trimmed to four and a manual
+// per-severity surcharge was added for Pet Hair Removal. Bumping the suffix
+// again in the future is the intended way to migrate a breaking shape
+// change without writing a migration script for a browser-only data store.
 
 import type { ClientRecord, SavedEstimate } from '../types'
 
-const ESTIMATES_KEY = 'hh-estimates-v6'
+const ESTIMATES_KEY = 'hh-estimates-v7'
 const CLIENTS_KEY = 'hh-clients-v2'
 const COUNTER_KEY = 'hh-estimate-counter-v1'
 
