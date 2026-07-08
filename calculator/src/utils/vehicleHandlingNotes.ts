@@ -1,9 +1,9 @@
 // Technician notes — special surfaces/finishes (PPF, ceramic coating, matte
-// paint, soft tops, exposed carbon fiber) plus Paint Condition findings.
-// Exterior/Interior Condition each already show their own note inline as
-// the caption under their priced line on the estimate, so they're not
-// repeated here — only Paint Condition, which has no pricing line of its
-// own, needs a home in this panel.
+// paint, soft tops, exposed carbon fiber) plus Paint/Wheels/Engine Bay
+// findings. Exterior/Interior Condition each already show their own note
+// inline as the caption under their priced line on the estimate, so they're
+// not repeated here — Paint, Wheels, and Engine Bay have no pricing line of
+// their own, so this panel is where their findings live.
 
 import { pricingConfig } from '../config/pricingConfig'
 import type { EstimateSelections, VehicleInfo } from '../types'
@@ -38,13 +38,20 @@ export function buildVehicleHandlingNotes(vehicle: VehicleInfo): string[] {
   return notes
 }
 
-/** Paint Condition findings, added alongside the vehicle handling notes
- * above — together these make up the full "Technician Notes" panel. Only
- * applies when Paint Enhancement Detail is selected. */
+/** Paint/Wheels/Engine Bay findings, added alongside the vehicle handling
+ * notes above — together these make up the full "Technician Notes" panel.
+ * None of these three carry their own price; they're reference categories
+ * that help decide the right primary service and Exterior/Interior
+ * Condition tier. */
 export function buildConditionNotes(selections: EstimateSelections): string[] {
-  if (selections.serviceId !== 'paint-enhancement') return []
+  const notes: string[] = []
   const paintTier = pricingConfig.paintConditions.find((c) => c.id === selections.paintConditionId)
-  return paintTier && paintTier.note ? [paintTier.note] : []
+  if (paintTier && paintTier.note) notes.push(paintTier.note)
+  const wheelTier = pricingConfig.wheelConditions.find((c) => c.id === selections.wheelConditionId)
+  if (wheelTier && wheelTier.note) notes.push(wheelTier.note)
+  const engineBayTier = pricingConfig.engineBayConditions.find((c) => c.id === selections.engineBayConditionId)
+  if (engineBayTier && engineBayTier.note) notes.push(engineBayTier.note)
+  return notes
 }
 
 export function buildTechnicianNotes(vehicle: VehicleInfo, selections: EstimateSelections): string[] {

@@ -1,5 +1,5 @@
-// Classifies a vehicle into Sports Car / Supercar / Luxury SUV & Truck /
-// Hypercar from its Make + Model, using the rules in pricingConfig.vehicleTypes.
+// Classifies a vehicle into Sports Car / Supercar / Truck / SUV / Hypercar
+// from its Make + Model, using the rules in pricingConfig.vehicleTypes.
 // Every vehicle gets a class — there's no "unsupported" case — Sports Car is
 // the default fallback for anything unrecognized, since it's also the
 // baseline/cheapest tier. Staff can always override the dropdown.

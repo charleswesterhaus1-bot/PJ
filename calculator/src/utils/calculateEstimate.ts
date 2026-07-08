@@ -119,6 +119,8 @@ export function defaultSelections(): EstimateSelections {
     exteriorConditionId: 'excellent',
     interiorConditionId: 'excellent',
     paintConditionId: 'excellent',
+    wheelConditionId: 'excellent',
+    engineBayConditionId: 'excellent',
     addOnIds: [],
     travelMiles: 0,
     discountId: 'none',

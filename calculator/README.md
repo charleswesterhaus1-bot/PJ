@@ -31,23 +31,27 @@ use day-to-day.
    coating/matte paint/convertible top/carbon fiber flags (these don't
    change price, but drive "Technician Notes" shown on the estimate). Make +
    Model auto-classify the vehicle into a **Vehicle Class** — Sports Car /
-   Supercar / Luxury SUV & Truck / Hypercar (`src/utils/classifyVehicle.ts`)
-   — every vehicle gets priced, there's no "unsupported" case. Vehicle Class
+   Supercar / Truck / SUV / Hypercar (`src/utils/classifyVehicle.ts`) —
+   every vehicle gets priced, there's no "unsupported" case. Vehicle Class
    doubles as the pricing dimension every service is keyed on and is always
    a dropdown-click away from override.
-3. **Primary Service** — one of four services (Interior Detail, Exterior
-   Detail, Full Detail, Paint Enhancement Detail), each with its exact
-   "includes" checklist and the equipment used. Paint Enhancement Detail
-   bundles Iron Removal, Clay Mitt Decontamination, and a one-step machine
-   polish directly into the package — those aren't separately purchasable
-   enhancements.
-4. **Condition & Findings** — three plain dropdowns. Exterior Condition and
+3. **Primary Service** — one of four services (Signature Interior Detail,
+   Signature Exterior Detail, Signature Full Detail, Signature Paint
+   Enhancement), each with its exact "includes" checklist and the equipment
+   used. Signature Paint Enhancement bundles Iron Decontamination, Clay
+   Mitt Decontamination, and a one-step machine polish directly into the
+   package (explicitly a single-stage service, never marketed as "paint
+   correction") — those aren't separately purchasable enhancements.
+4. **Condition & Findings** — five dropdowns. Exterior Condition and
    Interior Condition each carry their own flat surcharge, applied once per
    side regardless of how many individual contamination types are present
    (bugs, brake dust, road film, tar, tree sap, fallout, general soiling) —
-   never itemized, never stacked. Paint Condition (only shown when Paint
-   Enhancement Detail is selected) is a technician note only — it never
-   changes price.
+   never itemized, never stacked; it exists purely to compensate for
+   additional labor. Paint, Wheels, and Engine Bay are technician-reference
+   categories only — no price impact — kept deliberately simple (one tier
+   each) so the inspection stays quick to fill out while still helping
+   decide which primary service and which Exterior/Interior Condition tier
+   fit.
 5. **Premium Enhancements** — every enhancement is available as an optional
    checkbox on every service ("regardless of package"); the only exception
    is Leather Conditioning, which is hidden unless Interior Material
@@ -76,28 +80,33 @@ src/config/pricingConfig.ts
 ```
 
 Services are priced per vehicle class explicitly (`basePriceByClass: {
-'sports-car', supercar, 'performance-truck', hypercar }`) rather than one
-number × a multiplier, since real class pricing isn't a clean ratio across
-every package — edit whichever class's number needs to change without
-touching the others. The cheapest class (Sports Car) is the pricing baseline;
-the "Exotic Vehicle Handling & Protection" line on the estimate is just the
-delta between that baseline and the selected class's price for the chosen
-service. A separate `multiplier` on each vehicle class scales labor hours and
-material cost only (never price) to reflect the extra time/care a pricier
-class actually takes. Edit any value and every screen updates automatically;
-no pricing is hardcoded anywhere else in the app. Exterior/Interior/Paint
-condition tiers and the vehicle classification rules (inside each
+'sports-car', supercar, 'luxury-suv-truck', hypercar }` — the id stays
+`luxury-suv-truck` internally even though the label shown to staff is
+"Truck / SUV") rather than one number × a multiplier, since real class
+pricing isn't a clean ratio across every package — edit whichever class's
+number needs to change without touching the others. The cheapest class
+(Sports Car) is the pricing baseline; the "Exotic Vehicle Handling &
+Protection" line on the estimate is just the delta between that baseline
+and the selected class's price for the chosen service. A separate
+`multiplier` on each vehicle class scales labor hours and material cost
+only (never price) to reflect the extra time/care a pricier class actually
+takes. Edit any value and every screen updates automatically; no pricing is
+hardcoded anywhere else in the app. Exterior/Interior/Paint/Wheels/Engine
+Bay condition tiers and the vehicle classification rules (inside each
 `vehicleTypes` entry) are similarly data-driven — add a tier or a new
 recognized nameplate/keyword without touching any component code.
 
 Premium Enhancements each carry an `availableForServiceIds` list, currently
 set to all four services on every enhancement — they're meant to be
-optional checkboxes regardless of which package is selected. Iron Removal
-and Clay Mitt Decontamination aren't enhancements at all anymore; they're
-bundled directly into Paint Enhancement Detail's `includes` list. Leather
-Conditioning is the one enhancement with a real availability gate: it sets
-`requiresLeatherInterior: true`, hiding it unless `VehicleInfo.interiorMaterial`
-includes leather.
+optional checkboxes regardless of which package is selected. Iron
+Decontamination and Clay Mitt Decontamination aren't enhancements at all
+anymore; they're bundled directly into Signature Paint Enhancement's
+`includes` list. Leather Conditioning is the one enhancement with a real
+availability gate: it sets `requiresLeatherInterior: true`, hiding it unless
+`VehicleInfo.interiorMaterial` includes leather. Every enhancement's
+`equipmentUsed` is drawn from the `equipment` list at the top of the same
+file — nothing is ever offered that requires equipment we don't actually
+own.
 
 A note on the margin-warning threshold (`labor.marginWarningThreshold`,
 45% by default): each service's `baseLaborHours` was calibrated so the

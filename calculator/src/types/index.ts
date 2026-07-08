@@ -155,7 +155,13 @@ export interface PricingConfig {
   vehicleTypes: (RateOption & { classification: VehicleClassificationRule })[]
   exteriorConditions: PricedConditionTier[]
   interiorConditions: PricedConditionTier[]
+  /** Paint, Wheels, and Engine Bay are technician-reference categories only
+   * — none of them carry their own surcharge. They exist to help decide
+   * which primary service fits and to help settle on the right Exterior/
+   * Interior Condition tier, without ever stacking into separate charges. */
   paintConditions: NoteOnlyConditionTier[]
+  wheelConditions: NoteOnlyConditionTier[]
+  engineBayConditions: NoteOnlyConditionTier[]
   services: ServiceOption[]
   addOns: AddOnOption[]
   travel: TravelConfig
@@ -235,6 +241,8 @@ export interface EstimateSelections {
   exteriorConditionId: ConditionTierId
   interiorConditionId: ConditionTierId
   paintConditionId: ConditionTierId
+  wheelConditionId: ConditionTierId
+  engineBayConditionId: ConditionTierId
   addOnIds: string[]
   travelMiles: number
   discountId: DiscountKind | 'none'

@@ -16,21 +16,14 @@ export const pricingConfig: PricingConfig = {
     tagline: 'Exotic & Performance Vehicle Care — Estimate Console',
   },
 
+  // Every service/add-on's `equipmentUsed` is drawn from this exact roster —
+  // nothing is ever advertised that we don't actually own.
   equipment: [
     { category: 'Pressure Washing', items: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon'] },
-    {
-      category: 'Wash Equipment',
-      items: ['Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels', 'Microfiber Towels', '3 Spray Bottles'],
-    },
-    { category: 'Wheel & Tire Care', items: ['Brake Buster', 'Wheel Brushes', 'CARPRO PERL'] },
-    {
-      category: 'Interior Care',
-      items: ['P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'McCulloch Steam Cleaner', 'Ridgid Shop Vac with Attachments', 'Detail Brushes', 'Boar Hair Brushes', 'Invisible Glass Cleaner'],
-    },
-    {
-      category: 'Decontamination & Polishing',
-      items: ["Meguiar's Ultimate Iron Remover", 'Nanoskin Clay Mitt', 'Maxshine Dual Action Polisher', 'Lake Country Pads', '3D One Compound/Polish'],
-    },
+    { category: 'Wash & Drying', items: ['The Rag Company Towels', 'Wheel Brushes', 'Detail Brushes'] },
+    { category: 'Wheel & Tire Care', items: ['P&S Brake Buster', 'CARPRO PERL'] },
+    { category: 'Interior Care', items: ['P&S Xpress Interior Cleaner', 'Leather Honey Cleaner', 'Leather Honey Conditioner', 'McCulloch Steamer', 'Shop Vacuum', 'Invisible Glass'] },
+    { category: 'Decontamination & Polishing', items: ['Iron Remover', 'Nanoskin Clay Mitt', 'Maxshine DA Polisher', 'Lake Country Pads', '3D One Polish'] },
   ],
 
   // ── Vehicle Class ────────────────────────────────────────────────────
@@ -42,7 +35,7 @@ export const pricingConfig: PricingConfig = {
       id: 'sports-car',
       label: 'Sports Car',
       multiplier: 1.0,
-      description: 'Mustang GT, Camaro SS, Toyota Supra, Nissan Z, BMW M2, Porsche Cayman, and similar performance cars',
+      description: 'Toyota Supra, BMW M2/M4, Nissan GT-R, Lotus Emira, Corvette Stingray, and similar performance cars',
       factors: ['Our baseline vehicle class — no additional handling surcharge'],
       classification: { makes: [], modelKeywords: [] },
     },
@@ -50,24 +43,24 @@ export const pricingConfig: PricingConfig = {
       id: 'supercar',
       label: 'Supercar',
       multiplier: 1.12,
-      description: 'Porsche 911 Turbo S, Ferrari, Lamborghini, McLaren, Audi R8, Acura NSX, and other exotic supercars',
+      description: 'Porsche 911 Turbo S, Ferrari, Lamborghini, McLaren, Audi R8, and other exotic supercars',
       factors: ['Low ground clearance, wide-body fitment, and exotic materials require specialized handling and product care'],
       classification: {
-        makes: ['ferrari', 'lamborghini', 'mclaren', 'lotus', 'aston martin', 'bentley', 'rolls-royce', 'rolls royce', 'acura'],
-        modelKeywords: ['gt3', '911 turbo', '911 gt', 'gt2', 'r8', 'z06', 'zr1', 'gt-r', 'gtr', 'amg gt', 'nsx'],
+        makes: ['ferrari', 'lamborghini', 'mclaren', 'aston martin', 'bentley', 'rolls-royce', 'rolls royce', 'acura'],
+        modelKeywords: ['gt3', '911 turbo', '911 gt', 'gt2', 'r8', 'z06', 'zr1', 'amg gt', 'nsx'],
       },
     },
     {
       id: 'luxury-suv-truck',
-      label: 'Luxury SUV & Truck',
+      label: 'Truck / SUV',
       multiplier: 1.22,
-      description: 'Cadillac Escalade, Range Rover, Mercedes G-Class, Rivian R1S, Ram Limited, GMC/Yukon Denali, BMW X7, Raptor, TRX, and other luxury SUVs and high-performance trucks',
+      description: 'Range Rover, Escalade, Mercedes G-Wagon, Ram 1500, Ford F-150, Tahoe, Yukon, BMW X7, Bentley Bentayga, Rolls-Royce Cullinan, and other trucks and SUVs',
       factors: ['Larger surface area and premium interior materials require additional time and care'],
       classification: {
         makes: ['rivian', 'ram'],
         modelKeywords: [
-          'escalade', 'range rover', 'g-class', 'g wagon', 'g-wagon', 'gwagen', 'denali', 'x7',
-          'raptor r', 'raptor', 'trx', 'shelby f-150', 'hummer ev',
+          'escalade', 'range rover', 'g-class', 'g wagon', 'g-wagon', 'gwagen', 'denali', 'yukon', 'tahoe', 'x7',
+          'bentayga', 'cullinan', 'f-150', 'f150', 'raptor r', 'raptor', 'trx', 'shelby f-150', 'hummer ev',
         ],
       },
     },
@@ -85,11 +78,14 @@ export const pricingConfig: PricingConfig = {
   ],
 
   // ── Condition & Findings ─────────────────────────────────────────────
-  // Exterior and Interior Condition each carry their own flat surcharge —
-  // applied ONCE per side, regardless of how many individual contamination
-  // types are present. The inspection items themselves are technician
-  // reference only; they help decide which single tier to pick and never
-  // stack into separate charges.
+  // Exterior and Interior Condition are the ONLY tiers that change price —
+  // one flat surcharge per side, applied once, that simply compensates for
+  // additional labor. It never stacks per contamination type (a car with
+  // heavy bugs, heavy tar, AND heavy road film is still just "Heavy
+  // Exterior Contamination," not three separate charges). Paint, Wheels,
+  // and Engine Bay are technician-reference categories that help decide
+  // which tier and which primary service fit — they never add their own
+  // charge.
   exteriorConditions: [
     { id: 'excellent', label: 'Excellent', surcharge: 0, note: 'Presented in showroom-ready condition — no additional exterior contamination charge.' },
     { id: 'light', label: 'Light Contamination', surcharge: 15, note: 'Light bugs, brake dust, road film, or fallout — minor added decontamination time.' },
@@ -104,127 +100,140 @@ export const pricingConfig: PricingConfig = {
   ],
   paintConditions: [
     { id: 'excellent', label: 'Excellent', note: '' },
-    { id: 'light', label: 'Light Swirls', note: 'Light swirl marks noted in the paint — informs polishing approach, no charge.' },
-    { id: 'moderate', label: 'Moderate Swirls', note: 'Moderate swirl marks noted in the paint — informs polishing approach, no charge.' },
-    { id: 'heavy', label: 'Heavy Swirls', note: 'Heavy swirl marks noted in the paint — informs polishing approach, no charge.' },
+    { id: 'light', label: 'Light Swirls', note: 'Light swirl marks noted in the paint — Signature Paint Enhancement is worth recommending.' },
+    { id: 'moderate', label: 'Moderate Swirls', note: 'Moderate swirl marks noted in the paint — Signature Paint Enhancement is recommended.' },
+    { id: 'heavy', label: 'Heavy Swirls', note: 'Heavy swirl marks and reduced clarity noted in the paint — Signature Paint Enhancement is strongly recommended.' },
+  ],
+  wheelConditions: [
+    { id: 'excellent', label: 'Excellent', note: '' },
+    { id: 'light', label: 'Light', note: 'Wheel faces/barrels show light brake dust or road grime — technician reference only.' },
+    { id: 'moderate', label: 'Moderate', note: 'Wheel faces/barrels show moderate brake dust or road grime — technician reference only.' },
+    { id: 'heavy', label: 'Heavy', note: 'Wheel faces/barrels show heavy, baked-on brake dust or road grime — technician reference only.' },
+  ],
+  engineBayConditions: [
+    { id: 'excellent', label: 'Excellent', note: '' },
+    { id: 'light', label: 'Light', note: 'Engine bay shows light dust/grime — consider the Engine Bay Detail enhancement.' },
+    { id: 'moderate', label: 'Moderate', note: 'Engine bay shows moderate dust/grime — consider the Engine Bay Detail enhancement.' },
+    { id: 'heavy', label: 'Heavy', note: 'Engine bay shows heavy grime buildup — the Engine Bay Detail enhancement is recommended.' },
   ],
 
   // ── Primary Services ─────────────────────────────────────────────────
   services: [
     {
       id: 'interior-detail',
-      label: 'Interior Detail',
+      label: 'Signature Interior Detail',
       includes: [
-        'Complete vacuum',
-        'Interior wipe down',
-        'Plastic & vinyl cleaning',
-        'Dashboard, console & door panels',
-        'Interior glass cleaning',
-        'Door jamb wipe down',
-        'Soft brush detailing of vents, buttons, badges and crevices',
-        'Leather cleaned (not conditioned)',
+        'Thorough vacuum',
+        'Interior blowout',
+        'Dashboard cleaning',
+        'Console cleaning',
+        'Door panels',
+        'Door jambs',
+        'Cup holders',
+        'Interior glass',
+        'Leather cleaning',
+        'Plastic trim cleaning',
+        'UV protectant dressing',
       ],
       basePriceByClass: { 'sports-car': 185, supercar: 215, 'luxury-suv-truck': 240, hypercar: 255 },
       baseLaborHours: 0.9,
       materialCost: 14,
-      equipmentUsed: ['P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'Ridgid Shop Vac with Attachments', 'Detail Brushes', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels'],
+      equipmentUsed: ['P&S Xpress Interior Cleaner', 'Leather Honey Cleaner', 'Shop Vacuum', 'Detail Brushes', 'Invisible Glass', 'The Rag Company Towels'],
     },
     {
       id: 'exterior-detail',
-      label: 'Exterior Detail',
+      label: 'Signature Exterior Detail',
       includes: [
-        'Wheels cleaned',
-        'Tires cleaned',
-        'Wheel faces & barrels cleaned',
-        'Wheel wells rinsed',
-        'Foam pre-soak',
+        'Foam cannon pre-soak',
         'Hand wash',
-        'Detail brushes around emblems, trim, fuel door, badges & crevices',
-        'Final rinse',
-        'Premium microfiber towel dry',
-        'Tire dressing',
+        'Wheel face cleaning',
+        'Wheel barrel cleaning',
+        'Tire cleaning',
+        'Tire dressing (CARPRO PERL)',
+        'Door jamb wipe-down',
         'Exterior glass cleaning',
+        'Detail brush cleaning',
+        'Blow dry where appropriate',
+        'Premium microfiber towel dry',
       ],
       basePriceByClass: { 'sports-car': 100, supercar: 115, 'luxury-suv-truck': 135, hypercar: 155 },
       baseLaborHours: 0.45,
       materialCost: 10,
-      equipmentUsed: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels', 'Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes'],
+      equipmentUsed: ['Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'P&S Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes', 'The Rag Company Towels'],
     },
     {
       id: 'full-detail',
-      label: 'Full Detail',
-      includes: ['Everything in Interior Detail', 'Everything in Exterior Detail'],
+      label: 'Signature Full Detail',
+      includes: ['Everything in Signature Interior Detail', 'Everything in Signature Exterior Detail'],
       basePriceByClass: { 'sports-car': 275, supercar: 295, 'luxury-suv-truck': 315, hypercar: 335 },
       baseLaborHours: 1.2,
       materialCost: 15,
       equipmentUsed: [
-        'Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels',
-        'Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes',
-        'P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'Ridgid Shop Vac with Attachments', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels',
+        'Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'P&S Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes',
+        'P&S Xpress Interior Cleaner', 'Leather Honey Cleaner', 'Shop Vacuum', 'Invisible Glass', 'The Rag Company Towels',
       ],
     },
     {
       id: 'paint-enhancement',
-      label: 'Paint Enhancement Detail',
+      label: 'Signature Paint Enhancement',
       includes: [
-        'Everything in Full Detail',
-        'Iron remover treatment',
+        'Everything in Signature Full Detail',
+        'Iron decontamination',
         'Clay mitt decontamination',
-        'One-step machine polish using our Maxshine DA polisher',
-        '3D One compound/polish',
-        'Appropriate Lake Country pad selection',
-        'Paint refinement to improve gloss and reduce light swirls',
-        'Finished with paint sealant',
+        'One-step machine polish',
+        'Paint gloss enhancement',
+        'Paint refinement',
+        'Premium paint sealant',
       ],
-      tagline: 'Our highest level service currently offered.',
-      basePriceByClass: { 'sports-car': 425, supercar: 450, 'luxury-suv-truck': 475, hypercar: 525 },
+      tagline: 'A single-stage enhancement — not a multi-stage paint correction. Our highest level service currently offered.',
+      basePriceByClass: { 'sports-car': 425, supercar: 475, 'luxury-suv-truck': 525, hypercar: 575 },
       baseLaborHours: 1.9,
       materialCost: 32,
       equipmentUsed: [
-        'Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'Chemical Guys Mr. Pink', '2 Five-Gallon Buckets', 'Grit Guards', 'Premium Wash Mitts', 'Premium Drying Towels',
-        'Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes',
-        'P&S Xpress Interior Cleaner', 'Leather Honey Cleaner/Conditioner', 'Ridgid Shop Vac with Attachments', 'Boar Hair Brushes', 'Invisible Glass Cleaner', 'Microfiber Towels',
-        "Meguiar's Ultimate Iron Remover", 'Nanoskin Clay Mitt', 'Maxshine Dual Action Polisher', 'Lake Country Pads', '3D One Compound/Polish',
+        'Active 2.0 Pressure Washer', 'MJJC Pro V3 Foam Cannon', 'P&S Brake Buster', 'Wheel Brushes', 'CARPRO PERL', 'Detail Brushes',
+        'P&S Xpress Interior Cleaner', 'Leather Honey Cleaner', 'Shop Vacuum', 'Invisible Glass', 'The Rag Company Towels',
+        'Iron Remover', 'Nanoskin Clay Mitt', 'Maxshine DA Polisher', 'Lake Country Pads', '3D One Polish',
       ],
     },
   ],
 
   // ── Premium Enhancements ─────────────────────────────────────────────
+  // Only enhancements we can actually perform with our current equipment.
   // Every enhancement is available as an optional checkbox regardless of
   // which package is selected — `availableForServiceIds` lists all four
   // services for each one. Leather Conditioning is the one exception with
-  // an actual availability gate: it's hidden unless the vehicle's interior
+  // a real availability gate: it's hidden unless the vehicle's interior
   // material includes leather (`requiresLeatherInterior`).
   addOns: [
     {
       id: 'steam-cleaning',
       label: 'Steam Cleaning',
-      includes: ['Steam cleaning of vents, buttons, and high-touch hard surfaces'],
+      includes: ['Steam cleaning of vents, buttons, and high-touch hard surfaces using our McCulloch steamer'],
       price: 45,
       laborHours: 0.2,
       materialCost: 5,
-      equipmentUsed: ['McCulloch Steam Cleaner', 'Microfiber Towels'],
+      equipmentUsed: ['McCulloch Steamer', 'The Rag Company Towels'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
     {
       id: 'leather-conditioning',
       label: 'Leather Conditioning',
-      includes: ['Leather Honey Conditioner', 'UV protection', 'Leather nourishment'],
-      price: 40,
-      laborHours: 0.15,
+      includes: ['Leather Honey conditioner', 'UV protection', 'Leather nourishment'],
+      price: 35,
+      laborHours: 0.13,
       materialCost: 7,
-      equipmentUsed: ['Leather Honey Cleaner/Conditioner'],
+      equipmentUsed: ['Leather Honey Conditioner'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
       requiresLeatherInterior: true,
     },
     {
       id: 'engine-bay',
       label: 'Engine Bay Detail',
-      includes: ['Safe rinse when appropriate', 'Gentle cleaning', 'Detail brushes', 'Drying', 'CARPRO PERL dressing'],
+      includes: ['Light-safe cleaning', 'Dress plastics with CARPRO PERL'],
       price: 60,
       laborHours: 0.26,
       materialCost: 8,
-      equipmentUsed: ['Active 2.0 Pressure Washer', 'Detail Brushes', 'Premium Drying Towels', 'CARPRO PERL'],
+      equipmentUsed: ['Active 2.0 Pressure Washer', 'Detail Brushes', 'The Rag Company Towels', 'CARPRO PERL'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
     {
@@ -234,47 +243,17 @@ export const pricingConfig: PricingConfig = {
       price: 40,
       laborHours: 0.18,
       materialCost: 3,
-      equipmentUsed: ['Ridgid Shop Vac with Attachments', 'Detail Brushes'],
+      equipmentUsed: ['Shop Vacuum', 'Detail Brushes'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
     {
       id: 'odor-treatment',
       label: 'Odor Treatment',
-      includes: ['Interior odor elimination treatment'],
+      includes: ['Interior odor elimination via cleaning and steam treatment (not ozone)'],
       price: 30,
       laborHours: 0.1,
       materialCost: 6,
-      equipmentUsed: ['P&S Xpress Interior Cleaner'],
-      availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
-    },
-    {
-      id: 'seat-extraction',
-      label: 'Seat Extraction (per row)',
-      includes: ['Deep extraction cleaning of one row of seating'],
-      price: 40,
-      laborHours: 0.18,
-      materialCost: 5,
-      equipmentUsed: ['Ridgid Shop Vac with Attachments', 'P&S Xpress Interior Cleaner'],
-      availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
-    },
-    {
-      id: 'carpet-extraction',
-      label: 'Carpet Extraction',
-      includes: ['Deep extraction cleaning of carpet and floor mats'],
-      price: 50,
-      laborHours: 0.24,
-      materialCost: 6,
-      equipmentUsed: ['Ridgid Shop Vac with Attachments', 'P&S Xpress Interior Cleaner'],
-      availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
-    },
-    {
-      id: 'headliner-spot-cleaning',
-      label: 'Headliner Spot Cleaning',
-      includes: ['Spot cleaning of headliner stains and soiling'],
-      price: 25,
-      laborHours: 0.11,
-      materialCost: 3,
-      equipmentUsed: ['P&S Xpress Interior Cleaner', 'Detail Brushes', 'Microfiber Towels'],
+      equipmentUsed: ['P&S Xpress Interior Cleaner', 'McCulloch Steamer'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
     {
@@ -284,32 +263,32 @@ export const pricingConfig: PricingConfig = {
       price: 20,
       laborHours: 0.08,
       materialCost: 3,
-      equipmentUsed: ['Chemical Guys Mr. Pink', 'Detail Brushes'],
+      equipmentUsed: ['Detail Brushes', 'The Rag Company Towels'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
     {
       id: 'tree-sap-removal',
       label: 'Tree Sap Removal',
-      includes: ['Targeted removal of bonded tree sap from paint'],
+      includes: ['Targeted removal of bonded tree sap — charged only when dedicated sap-remover chemistry is required'],
       price: 30,
       laborHours: 0.13,
       materialCost: 4,
-      equipmentUsed: ['Detail Brushes', 'Microfiber Towels'],
+      equipmentUsed: ['Detail Brushes', 'The Rag Company Towels'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
     {
       id: 'tar-removal',
       label: 'Tar Removal',
-      includes: ['Targeted removal of bonded tar and road grime from paint'],
+      includes: ['Targeted removal of bonded tar and road grime — charged only when dedicated tar-remover chemistry is required'],
       price: 30,
       laborHours: 0.13,
       materialCost: 4,
-      equipmentUsed: ['Detail Brushes', 'Microfiber Towels'],
+      equipmentUsed: ['Detail Brushes', 'The Rag Company Towels'],
       availableForServiceIds: ['interior-detail', 'exterior-detail', 'full-detail', 'paint-enhancement'],
     },
   ],
 
-  travel: { freeMiles: 25, pricePerMile: 2.5 },
+  travel: { freeMiles: 15, pricePerMile: 2.5 },
 
   discounts: [
     { id: 'military', label: 'Military', percentage: 0.1, description: 'Active duty, reserve, or veteran' },
